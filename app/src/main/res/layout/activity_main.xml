@@ -80,6 +80,16 @@
                 android:layout_marginStart="12dp" />
         </LinearLayout>
 
+        <EditText
+            android:id="@+id/tracked_items_search_input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:hint="@string/tracked_items_search_hint"
+            android:inputType="text"
+            android:maxLines="1"
+            android:singleLine="true" />
+
         <TextView
             android:id="@+id/empty_state_text"
             android:layout_width="match_parent"

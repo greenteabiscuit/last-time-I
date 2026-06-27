@@ -4,6 +4,8 @@
     <string name="app_subtitle">Track the last time something happened and reset it to today from your home screen. The widget is for quick updates, while the app handles add, edit, and delete.</string>
     <string name="tracked_items_section_title">Tracked Items</string>
     <string name="empty_tracked_items_state">No tracked items yet. Tap Add Item to create your first one.</string>
+    <string name="empty_tracked_items_search_state">No tracked items match your search.</string>
+    <string name="tracked_items_search_hint">Search tracked items</string>
     <string name="add_item_button">Add Item</string>
     <string name="refresh_widget_button">Refresh All Widgets From The App</string>
     <string name="status_no_widget">Tracking %1$d item(s). No home-screen widgets found. Last checked at %2$s.</string>
@@ -48,6 +50,8 @@
     <string name="widget_row_refresh_button">Today</string>
     <string name="widget_last_updated">Updated %1$s</string>
     <string name="widget_description">A home-screen widget for remembering the last time you did something.</string>
+    <string name="widget_latest_section_title">Latest</string>
+    <string name="widget_oldest_section_title">Oldest</string>
     <string name="widget_summary_empty">No items</string>
     <string name="widget_summary_tracking">%1$d tracked</string>
     <string name="widget_more_items">+%1$d more in app</string>

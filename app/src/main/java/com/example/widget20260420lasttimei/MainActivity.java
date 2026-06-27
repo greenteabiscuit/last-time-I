@@ -6,7 +6,9 @@ import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.InputType;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -48,6 +50,7 @@ public class MainActivity extends Activity {
     private TextView emptyStateText;
     private LinearLayout itemsContainer;
     private int selectedSortOrder = SORT_LATEST_UPDATED;
+    private String trackedItemsSearchQuery = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,8 +64,10 @@ public class MainActivity extends Activity {
         Button addItemButton = findViewById(R.id.add_item_button);
         Button refreshButton = findViewById(R.id.refresh_widget_button);
         Spinner sortSpinner = findViewById(R.id.tracked_items_sort_spinner);
+        EditText searchInput = findViewById(R.id.tracked_items_search_input);
 
         setupSortSpinner(sortSpinner);
+        setupSearchInput(searchInput);
 
         addItemButton.setOnClickListener(view -> showItemEditorDialog(null));
 
@@ -111,6 +116,26 @@ public class MainActivity extends Activity {
         });
     }
 
+    private void setupSearchInput(EditText searchInput) {
+        searchInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence text, int start, int count, int after) {
+                // No-op.
+            }
+
+            @Override
+            public void onTextChanged(CharSequence text, int start, int before, int count) {
+                trackedItemsSearchQuery = text == null ? "" : text.toString().trim();
+                renderItems(LastTimeStorage.getItems(MainActivity.this));
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                // No-op.
+            }
+        });
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -145,10 +170,14 @@ public class MainActivity extends Activity {
 
     private void renderItems(List<LastTimeItem> items) {
         LayoutInflater layoutInflater = LayoutInflater.from(this);
-        List<LastTimeItem> sortedItems = getSortedAppItems(items);
+        List<LastTimeItem> filteredItems = getFilteredAppItems(items);
+        List<LastTimeItem> sortedItems = getSortedAppItems(filteredItems);
         itemsContainer.removeAllViews();
 
         if (sortedItems.isEmpty()) {
+            emptyStateText.setText(trackedItemsSearchQuery.isEmpty()
+                    ? R.string.empty_tracked_items_state
+                    : R.string.empty_tracked_items_search_state);
             emptyStateText.setVisibility(View.VISIBLE);
             return;
         }
@@ -188,6 +217,23 @@ public class MainActivity extends Activity {
             deleteButton.setOnClickListener(view -> confirmDeleteItem(item.getId()));
             itemsContainer.addView(row);
         }
+    }
+
+    private List<LastTimeItem> getFilteredAppItems(List<LastTimeItem> items) {
+        if (trackedItemsSearchQuery.isEmpty()) {
+            return new ArrayList<>(items);
+        }
+
+        String normalizedQuery = trackedItemsSearchQuery.toLowerCase(Locale.getDefault());
+        List<LastTimeItem> filteredItems = new ArrayList<>();
+
+        for (LastTimeItem item : items) {
+            if (item.getTitle().toLowerCase(Locale.getDefault()).contains(normalizedQuery)) {
+                filteredItems.add(item);
+            }
+        }
+
+        return filteredItems;
     }
 
     private List<LastTimeItem> getSortedAppItems(List<LastTimeItem> items) {

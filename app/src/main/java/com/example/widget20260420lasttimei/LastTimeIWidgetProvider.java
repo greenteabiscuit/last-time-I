@@ -14,7 +14,9 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class LastTimeIWidgetProvider extends AppWidgetProvider {
     private static final String LOG_TAG = "LastTimeIWidget";
@@ -23,7 +25,9 @@ public class LastTimeIWidgetProvider extends AppWidgetProvider {
     public static final String ACTION_OPEN_ADD_ITEM = "com.example.widget20260420lasttimei.action.OPEN_ADD_ITEM";
     public static final String ACTION_OPEN_EDIT_ITEM = "com.example.widget20260420lasttimei.action.OPEN_EDIT_ITEM";
     public static final String EXTRA_ITEM_ID = "com.example.widget20260420lasttimei.extra.ITEM_ID";
-    private static final int VISIBLE_ITEM_COUNT = 8;
+    private static final int SECTION_ITEM_COUNT = 3;
+    private static final int LATEST_SECTION_START_INDEX = 0;
+    private static final int OLDEST_SECTION_START_INDEX = 3;
 
     private static final int[] ROW_IDS = new int[] {
             R.id.widget_row_1,
@@ -144,7 +148,9 @@ public class LastTimeIWidgetProvider extends AppWidgetProvider {
 
     private static void updateSingleWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_last_time_i);
-        List<LastTimeItem> items = getRecentlyUpdatedItems(context);
+        List<LastTimeItem> items = getItemsByLastUpdated(context, false);
+        List<LastTimeItem> latestItems = getSectionItems(items, SECTION_ITEM_COUNT);
+        List<LastTimeItem> oldestItems = getOldestItemsExcluding(context, latestItems, SECTION_ITEM_COUNT);
         String updatedAt = DateFormat.getTimeInstance(DateFormat.SHORT).format(new Date());
 
         Log.d(LOG_TAG, "Updating widget id=" + appWidgetId + " with " + items.size() + " tracked item(s) at " + updatedAt);
@@ -160,27 +166,16 @@ public class LastTimeIWidgetProvider extends AppWidgetProvider {
             views.setViewVisibility(R.id.widget_empty_state, View.GONE);
         }
 
-        int visibleCount = Math.min(items.size(), VISIBLE_ITEM_COUNT);
-
         for (int index = 0; index < ROW_IDS.length; index++) {
-            if (index >= visibleCount) {
-                views.setViewVisibility(ROW_IDS[index], View.GONE);
-                continue;
-            }
-
-            LastTimeItem item = items.get(index);
-            boolean isOverdue = item.isOverdue();
-            String dayCountLabel = LastTimeFormatter.getDayCountLabel(context, item.getLastRefreshedAtMillis());
-            views.setViewVisibility(ROW_IDS[index], View.VISIBLE);
-            views.setTextViewText(TITLE_IDS[index], item.getTitle());
-            views.setTextViewText(DAYS_IDS[index], isOverdue ? context.getString(R.string.widget_overdue_day_count, dayCountLabel) : dayCountLabel);
-            views.setTextColor(TITLE_IDS[index], context.getColor(isOverdue ? R.color.widget_overdue : R.color.widget_text_primary));
-            views.setTextColor(DAYS_IDS[index], context.getColor(isOverdue ? R.color.widget_overdue : R.color.widget_text_secondary));
-            views.setOnClickPendingIntent(TITLE_IDS[index], createOpenAppPendingIntent(context, buildRequestCode(appWidgetId, 300 + index), ACTION_OPEN_EDIT_ITEM, item.getId()));
-            views.setOnClickPendingIntent(DAYS_IDS[index], createOpenAppPendingIntent(context, buildRequestCode(appWidgetId, 400 + index), ACTION_OPEN_EDIT_ITEM, item.getId()));
-            views.setOnClickPendingIntent(REFRESH_BUTTON_IDS[index], createMarkNowPendingIntent(context, appWidgetId, index, item.getId()));
+            views.setViewVisibility(ROW_IDS[index], View.GONE);
         }
 
+        views.setViewVisibility(R.id.widget_latest_section_header, latestItems.isEmpty() ? View.GONE : View.VISIBLE);
+        views.setViewVisibility(R.id.widget_oldest_section_header, oldestItems.isEmpty() ? View.GONE : View.VISIBLE);
+        bindWidgetRows(context, views, appWidgetId, LATEST_SECTION_START_INDEX, latestItems);
+        bindWidgetRows(context, views, appWidgetId, OLDEST_SECTION_START_INDEX, oldestItems);
+
+        int visibleCount = latestItems.size() + oldestItems.size();
         int moreCount = items.size() - visibleCount;
 
         if (moreCount > 0) {
@@ -196,10 +191,58 @@ public class LastTimeIWidgetProvider extends AppWidgetProvider {
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }
 
-    private static List<LastTimeItem> getRecentlyUpdatedItems(Context context) {
+    private static void bindWidgetRows(Context context, RemoteViews views, int appWidgetId, int startIndex, List<LastTimeItem> items) {
+        for (int itemIndex = 0; itemIndex < items.size(); itemIndex++) {
+            int rowIndex = startIndex + itemIndex;
+            LastTimeItem item = items.get(itemIndex);
+            boolean isOverdue = item.isOverdue();
+            String dayCountLabel = LastTimeFormatter.getDayCountLabel(context, item.getLastRefreshedAtMillis());
+
+            views.setViewVisibility(ROW_IDS[rowIndex], View.VISIBLE);
+            views.setTextViewText(TITLE_IDS[rowIndex], item.getTitle());
+            views.setTextViewText(DAYS_IDS[rowIndex], isOverdue ? context.getString(R.string.widget_overdue_day_count, dayCountLabel) : dayCountLabel);
+            views.setTextColor(TITLE_IDS[rowIndex], context.getColor(isOverdue ? R.color.widget_overdue : R.color.widget_text_primary));
+            views.setTextColor(DAYS_IDS[rowIndex], context.getColor(isOverdue ? R.color.widget_overdue : R.color.widget_text_secondary));
+            views.setOnClickPendingIntent(TITLE_IDS[rowIndex], createOpenAppPendingIntent(context, buildRequestCode(appWidgetId, 300 + rowIndex), ACTION_OPEN_EDIT_ITEM, item.getId()));
+            views.setOnClickPendingIntent(DAYS_IDS[rowIndex], createOpenAppPendingIntent(context, buildRequestCode(appWidgetId, 400 + rowIndex), ACTION_OPEN_EDIT_ITEM, item.getId()));
+            views.setOnClickPendingIntent(REFRESH_BUTTON_IDS[rowIndex], createMarkNowPendingIntent(context, appWidgetId, rowIndex, item.getId()));
+        }
+    }
+
+    private static List<LastTimeItem> getItemsByLastUpdated(Context context, boolean oldestFirst) {
         List<LastTimeItem> items = new ArrayList<>(LastTimeStorage.getItems(context));
-        Collections.sort(items, (left, right) -> Long.compare(right.getLastRefreshedAtMillis(), left.getLastRefreshedAtMillis()));
+        Collections.sort(items, (left, right) -> oldestFirst
+                ? Long.compare(left.getLastRefreshedAtMillis(), right.getLastRefreshedAtMillis())
+                : Long.compare(right.getLastRefreshedAtMillis(), left.getLastRefreshedAtMillis()));
         return items;
+    }
+
+    private static List<LastTimeItem> getSectionItems(List<LastTimeItem> items, int sectionItemCount) {
+        return new ArrayList<>(items.subList(0, Math.min(items.size(), sectionItemCount)));
+    }
+
+    private static List<LastTimeItem> getOldestItemsExcluding(Context context, List<LastTimeItem> latestItems, int sectionItemCount) {
+        Set<String> latestItemIds = new HashSet<>();
+
+        for (LastTimeItem item : latestItems) {
+            latestItemIds.add(item.getId());
+        }
+
+        List<LastTimeItem> oldestItems = new ArrayList<>();
+
+        for (LastTimeItem item : getItemsByLastUpdated(context, true)) {
+            if (latestItemIds.contains(item.getId())) {
+                continue;
+            }
+
+            oldestItems.add(item);
+
+            if (oldestItems.size() == sectionItemCount) {
+                break;
+            }
+        }
+
+        return oldestItems;
     }
 
     private static String buildSummaryText(Context context, int totalCount) {
