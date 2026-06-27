@@ -67,6 +67,18 @@ public final class LastTimeStorage {
         return null;
     }
 
+    public static List<LastTimeItem> getActiveItems(Context context) {
+        List<LastTimeItem> activeItems = new ArrayList<>();
+
+        for (LastTimeItem item : getItems(context)) {
+            if (!item.isDeleted()) {
+                activeItems.add(item);
+            }
+        }
+
+        return activeItems;
+    }
+
     public static LastTimeItem addItem(Context context, String rawTitle) {
         return addItem(context, rawTitle, 0);
     }
@@ -106,6 +118,10 @@ public final class LastTimeStorage {
 
         for (LastTimeItem item : items) {
             if (item.getId().equals(itemId)) {
+                if (item.isDeleted()) {
+                    return false;
+                }
+
                 item.setTitle(title);
                 item.setIntervalDays(intervalDays);
                 saveItems(context, items, "update item " + itemId);
@@ -119,10 +135,32 @@ public final class LastTimeStorage {
     public static boolean deleteItem(Context context, String itemId) {
         List<LastTimeItem> items = getItems(context);
 
-        for (int index = 0; index < items.size(); index++) {
-            if (items.get(index).getId().equals(itemId)) {
-                items.remove(index);
-                saveItems(context, items, "delete item " + itemId);
+        for (LastTimeItem item : items) {
+            if (item.getId().equals(itemId)) {
+                if (item.isDeleted()) {
+                    return false;
+                }
+
+                item.markDeleted(System.currentTimeMillis());
+                saveItems(context, items, "soft delete item " + itemId);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static boolean restoreItem(Context context, String itemId) {
+        List<LastTimeItem> items = getItems(context);
+
+        for (LastTimeItem item : items) {
+            if (item.getId().equals(itemId)) {
+                if (!item.isDeleted()) {
+                    return false;
+                }
+
+                item.restore();
+                saveItems(context, items, "restore item " + itemId);
                 return true;
             }
         }
@@ -136,6 +174,10 @@ public final class LastTimeStorage {
 
         for (LastTimeItem item : items) {
             if (item.getId().equals(itemId)) {
+                if (item.isDeleted()) {
+                    return false;
+                }
+
                 item.recordRefreshOn(today);
                 saveItems(context, items, "mark now for item " + itemId);
                 return true;
@@ -150,6 +192,10 @@ public final class LastTimeStorage {
 
         for (LastTimeItem item : items) {
             if (item.getId().equals(itemId)) {
+                if (item.isDeleted()) {
+                    return false;
+                }
+
                 item.toggleRefreshOn(refreshDate);
                 saveItems(context, items, "toggle refresh day " + refreshDate + " for item " + itemId);
                 return true;

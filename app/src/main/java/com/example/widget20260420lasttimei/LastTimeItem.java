@@ -18,18 +18,28 @@ public class LastTimeItem {
     private static final String KEY_REFRESH_HISTORY_DATES = "refreshHistoryDates";
     private static final String KEY_REFRESH_HISTORY_MILLIS = "refreshHistoryMillis";
     private static final String KEY_INTERVAL_DAYS = "intervalDays";
+    private static final String KEY_DELETED_AT_MILLIS = "deletedAtMillis";
 
     private final String id;
     private String title;
     private long lastRefreshedAtMillis;
     private int intervalDays;
+    private long deletedAtMillis;
     private final List<LocalDate> refreshHistoryDates;
 
-    public LastTimeItem(String id, String title, long lastRefreshedAtMillis, int intervalDays, List<LocalDate> refreshHistoryDates) {
+    public LastTimeItem(
+            String id,
+            String title,
+            long lastRefreshedAtMillis,
+            int intervalDays,
+            long deletedAtMillis,
+            List<LocalDate> refreshHistoryDates
+    ) {
         this.id = id;
         this.title = title;
         this.lastRefreshedAtMillis = lastRefreshedAtMillis;
         this.intervalDays = Math.max(intervalDays, 0);
+        this.deletedAtMillis = Math.max(deletedAtMillis, 0L);
         this.refreshHistoryDates = refreshHistoryDates;
     }
 
@@ -46,6 +56,7 @@ public class LastTimeItem {
                 title,
                 LastTimeFormatter.getStartOfDayMillis(today),
                 intervalDays,
+                0L,
                 refreshHistoryDates
         );
     }
@@ -70,6 +81,7 @@ public class LastTimeItem {
                 ? jsonObject.optLong(KEY_LAST_REFRESHED_AT_MILLIS, 0L)
                 : 0L;
         int intervalDays = Math.max(jsonObject.optInt(KEY_INTERVAL_DAYS, 0), 0);
+        long deletedAtMillis = Math.max(jsonObject.optLong(KEY_DELETED_AT_MILLIS, 0L), 0L);
 
         TreeSet<LocalDate> refreshHistoryDates = new TreeSet<>();
         JSONArray refreshHistoryDatesJson = jsonObject.optJSONArray(KEY_REFRESH_HISTORY_DATES);
@@ -111,7 +123,7 @@ public class LastTimeItem {
         long latestRefreshAtMillis = refreshHistoryDates.isEmpty()
                 ? 0L
                 : LastTimeFormatter.getStartOfDayMillis(refreshHistoryDates.last());
-        return new LastTimeItem(id, title, latestRefreshAtMillis, intervalDays, new ArrayList<>(refreshHistoryDates));
+        return new LastTimeItem(id, title, latestRefreshAtMillis, intervalDays, deletedAtMillis, new ArrayList<>(refreshHistoryDates));
     }
 
     public JSONObject toJson() throws JSONException {
@@ -126,6 +138,7 @@ public class LastTimeItem {
         jsonObject.put(KEY_TITLE, title);
         jsonObject.put(KEY_LAST_REFRESHED_AT_MILLIS, lastRefreshedAtMillis);
         jsonObject.put(KEY_INTERVAL_DAYS, intervalDays);
+        jsonObject.put(KEY_DELETED_AT_MILLIS, deletedAtMillis);
         jsonObject.put(KEY_REFRESH_HISTORY_DATES, refreshHistoryJson);
         return jsonObject;
     }
@@ -148,6 +161,22 @@ public class LastTimeItem {
 
     public int getIntervalDays() {
         return intervalDays;
+    }
+
+    public long getDeletedAtMillis() {
+        return deletedAtMillis;
+    }
+
+    public boolean isDeleted() {
+        return deletedAtMillis > 0L;
+    }
+
+    public void markDeleted(long deletedAtMillis) {
+        this.deletedAtMillis = Math.max(deletedAtMillis, 1L);
+    }
+
+    public void restore() {
+        deletedAtMillis = 0L;
     }
 
     public void setIntervalDays(int intervalDays) {

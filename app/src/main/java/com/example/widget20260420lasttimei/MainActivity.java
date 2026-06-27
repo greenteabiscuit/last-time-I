@@ -76,12 +76,12 @@ public class MainActivity extends Activity {
             Log.d(LOG_TAG, "Refresh requested from app for " + widgetCount + " widget(s)");
             List<LastTimeItem> items = LastTimeStorage.getItems(this);
             renderItems(items);
-            updateStatusText(widgetCount, items.size(), true);
+            updateStatusText(widgetCount, getActiveItemCount(items), true);
         });
 
         List<LastTimeItem> items = LastTimeStorage.getItems(this);
         renderItems(items);
-        updateStatusText(LastTimeIWidgetProvider.getInstalledWidgetCount(this), items.size(), false);
+        updateStatusText(LastTimeIWidgetProvider.getInstalledWidgetCount(this), getActiveItemCount(items), false);
         handleLaunchIntent(getIntent());
     }
 
@@ -142,7 +142,7 @@ public class MainActivity extends Activity {
 
         List<LastTimeItem> items = LastTimeStorage.getItems(this);
         renderItems(items);
-        updateStatusText(LastTimeIWidgetProvider.getInstalledWidgetCount(this), items.size(), false);
+        updateStatusText(LastTimeIWidgetProvider.getInstalledWidgetCount(this), getActiveItemCount(items), false);
     }
 
     @Override
@@ -194,17 +194,24 @@ public class MainActivity extends Activity {
             Button deleteButton = row.findViewById(R.id.item_delete_button);
 
             boolean isOverdue = item.isOverdue();
+            boolean isDeleted = item.isDeleted();
             String summary = LastTimeFormatter.getAppSummary(this, item.getLastRefreshedAtMillis());
             titleView.setText(item.getTitle());
-            summaryView.setText(isOverdue ? getString(R.string.item_overdue_summary, summary) : summary);
-            titleView.setTextColor(getColor(isOverdue ? R.color.widget_overdue : R.color.widget_text_primary));
-            summaryView.setTextColor(getColor(isOverdue ? R.color.widget_overdue : R.color.widget_text_secondary));
+            summaryView.setText(getItemSummary(item, summary, isOverdue, isDeleted));
+            titleView.setTextColor(getColor(getItemTitleColor(isOverdue, isDeleted)));
+            summaryView.setTextColor(getColor(getItemSummaryColor(isOverdue, isDeleted)));
 
             View.OnClickListener editClickListener = view -> showItemEditorDialog(item.getId());
-            row.setOnClickListener(editClickListener);
-            titleView.setOnClickListener(editClickListener);
-            summaryView.setOnClickListener(editClickListener);
-            editButton.setOnClickListener(editClickListener);
+            row.setEnabled(!isDeleted);
+            row.setAlpha(isDeleted ? 0.55f : 1f);
+            row.setOnClickListener(isDeleted ? null : editClickListener);
+            titleView.setOnClickListener(isDeleted ? null : editClickListener);
+            summaryView.setOnClickListener(isDeleted ? null : editClickListener);
+            editButton.setEnabled(!isDeleted);
+            editButton.setOnClickListener(isDeleted ? null : editClickListener);
+            markTodayButton.setEnabled(!isDeleted);
+            historyButton.setEnabled(!isDeleted);
+            deleteButton.setText(isDeleted ? R.string.restore_item_button : R.string.delete_item_button);
 
             markTodayButton.setOnClickListener(view -> {
                 if (LastTimeStorage.markNow(this, item.getId())) {
@@ -214,9 +221,44 @@ public class MainActivity extends Activity {
             });
 
             historyButton.setOnClickListener(view -> showHistoryDialog(item.getId()));
-            deleteButton.setOnClickListener(view -> confirmDeleteItem(item.getId()));
+            deleteButton.setOnClickListener(view -> {
+                if (isDeleted) {
+                    restoreItem(item.getId());
+                    return;
+                }
+
+                confirmDeleteItem(item.getId());
+            });
             itemsContainer.addView(row);
         }
+    }
+
+    private String getItemSummary(LastTimeItem item, String summary, boolean isOverdue, boolean isDeleted) {
+        if (isDeleted) {
+            return getString(
+                    R.string.item_deleted_summary,
+                    LastTimeFormatter.getDateLabel(item.getDeletedAtMillis()),
+                    summary
+            );
+        }
+
+        return isOverdue ? getString(R.string.item_overdue_summary, summary) : summary;
+    }
+
+    private int getItemTitleColor(boolean isOverdue, boolean isDeleted) {
+        if (isDeleted) {
+            return R.color.widget_text_muted;
+        }
+
+        return isOverdue ? R.color.widget_overdue : R.color.widget_text_primary;
+    }
+
+    private int getItemSummaryColor(boolean isOverdue, boolean isDeleted) {
+        if (isDeleted) {
+            return R.color.widget_text_muted;
+        }
+
+        return isOverdue ? R.color.widget_overdue : R.color.widget_text_secondary;
     }
 
     private List<LastTimeItem> getFilteredAppItems(List<LastTimeItem> items) {
@@ -240,17 +282,25 @@ public class MainActivity extends Activity {
         List<LastTimeItem> sortedItems = new ArrayList<>(items);
 
         if (selectedSortOrder == SORT_OLDEST_UPDATED) {
-            Collections.sort(sortedItems, (left, right) -> compareByLastUpdated(left, right, true));
+            Collections.sort(sortedItems, (left, right) -> compareDeletedThen(left, right, compareByLastUpdated(left, right, true)));
             return sortedItems;
         }
 
         if (selectedSortOrder == SORT_ALPHABETICAL) {
-            Collections.sort(sortedItems, this::compareByTitle);
+            Collections.sort(sortedItems, (left, right) -> compareDeletedThen(left, right, compareByTitle(left, right)));
             return sortedItems;
         }
 
-        Collections.sort(sortedItems, (left, right) -> compareByLastUpdated(left, right, false));
+        Collections.sort(sortedItems, (left, right) -> compareDeletedThen(left, right, compareByLastUpdated(left, right, false)));
         return sortedItems;
+    }
+
+    private int compareDeletedThen(LastTimeItem left, LastTimeItem right, int activeComparison) {
+        if (left.isDeleted() != right.isDeleted()) {
+            return left.isDeleted() ? 1 : -1;
+        }
+
+        return activeComparison;
     }
 
     private int compareByLastUpdated(LastTimeItem left, LastTimeItem right, boolean oldestFirst) {
@@ -281,11 +331,29 @@ public class MainActivity extends Activity {
         return left.getId().compareTo(right.getId());
     }
 
+    private int getActiveItemCount(List<LastTimeItem> items) {
+        int activeItemCount = 0;
+
+        for (LastTimeItem item : items) {
+            if (!item.isDeleted()) {
+                activeItemCount++;
+            }
+        }
+
+        return activeItemCount;
+    }
+
     private void showItemEditorDialog(String itemId) {
         LastTimeItem existingItem = itemId == null ? null : LastTimeStorage.getItem(this, itemId);
 
         if (itemId != null && existingItem == null) {
             Log.d(LOG_TAG, "Tried to edit missing item " + itemId);
+            syncItemsAndWidget();
+            return;
+        }
+
+        if (existingItem != null && existingItem.isDeleted()) {
+            Log.d(LOG_TAG, "Tried to edit soft-deleted item " + itemId);
             syncItemsAndWidget();
             return;
         }
@@ -881,11 +949,18 @@ public class MainActivity extends Activity {
                 .setMessage(getString(R.string.delete_item_confirmation, item.getTitle()))
                 .setPositiveButton(R.string.delete_item_button, (dialogInterface, which) -> {
                     LastTimeStorage.deleteItem(this, itemId);
-                    Log.d(LOG_TAG, "Tracked item deleted from app: " + itemId);
+                    Log.d(LOG_TAG, "Tracked item soft-deleted from app: " + itemId);
                     syncItemsAndWidget();
                 })
                 .setNegativeButton(android.R.string.cancel, null)
                 .show();
+    }
+
+    private void restoreItem(String itemId) {
+        if (LastTimeStorage.restoreItem(this, itemId)) {
+            Log.d(LOG_TAG, "Tracked item restored from app: " + itemId);
+            syncItemsAndWidget();
+        }
     }
 
     private void handleLaunchIntent(Intent intent) {

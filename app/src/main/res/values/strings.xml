@@ -13,6 +13,7 @@
     <string name="status_refreshed">Refreshed %1$d widget(s) with %2$d tracked item(s) at %3$s.</string>
     <string name="edit_item_button">Edit</string>
     <string name="delete_item_button">Delete</string>
+    <string name="restore_item_button">Restore</string>
     <string name="item_mark_today_button">Mark Today</string>
     <string name="save_item_button">Save</string>
     <string name="dialog_add_title">Add "Last time I..." item</string>
@@ -22,6 +23,7 @@
     <string name="item_title_required">Enter an item name.</string>
     <string name="item_interval_invalid">Enter a whole number of days, or leave it empty.</string>
     <string name="item_overdue_summary">⚠ Overdue · %1$s</string>
+    <string name="item_deleted_summary">Deleted %1$s · %2$s</string>
     <string name="sort_latest_updated">Latest updated</string>
     <string name="sort_oldest_updated">Oldest updated</string>
     <string name="sort_alphabetical">A to Z</string>

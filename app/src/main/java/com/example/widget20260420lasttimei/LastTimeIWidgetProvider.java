@@ -210,7 +210,7 @@ public class LastTimeIWidgetProvider extends AppWidgetProvider {
     }
 
     private static List<LastTimeItem> getItemsByLastUpdated(Context context, boolean oldestFirst) {
-        List<LastTimeItem> items = new ArrayList<>(LastTimeStorage.getItems(context));
+        List<LastTimeItem> items = new ArrayList<>(LastTimeStorage.getActiveItems(context));
         Collections.sort(items, (left, right) -> oldestFirst
                 ? Long.compare(left.getLastRefreshedAtMillis(), right.getLastRefreshedAtMillis())
                 : Long.compare(right.getLastRefreshedAtMillis(), left.getLastRefreshedAtMillis()));
