@@ -1,27 +1,53 @@
 package com.example.widget20260420lasttimei;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewParent;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import android.widget.TextView;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.TextStyle;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.text.DateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends Activity {
     private static final String LOG_TAG = "LastTimeIWidget";
+    private static final LocalDate HISTORY_START_DATE = LocalDate.of(2020, 1, 1);
+    private static final int RECENT_EVENT_COUNT = 6;
+    private static final int HISTORY_MONTH_SWIPE_MIN_DISTANCE_DP = 48;
+    private static final int HISTORY_MONTH_SLIDE_DURATION_MS = 180;
+    private static final int SORT_LATEST_UPDATED = 0;
+    private static final int SORT_OLDEST_UPDATED = 1;
+    private static final int SORT_ALPHABETICAL = 2;
 
     private TextView statusText;
     private TextView emptyStateText;
     private LinearLayout itemsContainer;
+    private int selectedSortOrder = SORT_LATEST_UPDATED;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +60,9 @@ public class MainActivity extends Activity {
         itemsContainer = findViewById(R.id.tracked_items_container);
         Button addItemButton = findViewById(R.id.add_item_button);
         Button refreshButton = findViewById(R.id.refresh_widget_button);
+        Spinner sortSpinner = findViewById(R.id.tracked_items_sort_spinner);
+
+        setupSortSpinner(sortSpinner);
 
         addItemButton.setOnClickListener(view -> showItemEditorDialog(null));
 
@@ -49,6 +78,37 @@ public class MainActivity extends Activity {
         renderItems(items);
         updateStatusText(LastTimeIWidgetProvider.getInstalledWidgetCount(this), items.size(), false);
         handleLaunchIntent(getIntent());
+    }
+
+    private void setupSortSpinner(Spinner sortSpinner) {
+        ArrayAdapter<String> sortAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_item,
+                new String[] {
+                        getString(R.string.sort_latest_updated),
+                        getString(R.string.sort_oldest_updated),
+                        getString(R.string.sort_alphabetical)
+                }
+        );
+        sortAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        sortSpinner.setAdapter(sortAdapter);
+        sortSpinner.setSelection(selectedSortOrder);
+        sortSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (selectedSortOrder == position) {
+                    return;
+                }
+
+                selectedSortOrder = position;
+                renderItems(LastTimeStorage.getItems(MainActivity.this));
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Keep the current sort order.
+            }
+        });
     }
 
     @Override
@@ -85,25 +145,31 @@ public class MainActivity extends Activity {
 
     private void renderItems(List<LastTimeItem> items) {
         LayoutInflater layoutInflater = LayoutInflater.from(this);
+        List<LastTimeItem> sortedItems = getSortedAppItems(items);
         itemsContainer.removeAllViews();
 
-        if (items.isEmpty()) {
+        if (sortedItems.isEmpty()) {
             emptyStateText.setVisibility(View.VISIBLE);
             return;
         }
 
         emptyStateText.setVisibility(View.GONE);
 
-        for (LastTimeItem item : items) {
+        for (LastTimeItem item : sortedItems) {
             View row = layoutInflater.inflate(R.layout.last_time_item_row, itemsContainer, false);
             TextView titleView = row.findViewById(R.id.item_title);
             TextView summaryView = row.findViewById(R.id.item_summary);
             Button markTodayButton = row.findViewById(R.id.item_mark_today_button);
+            Button historyButton = row.findViewById(R.id.item_history_button);
             Button editButton = row.findViewById(R.id.item_edit_button);
             Button deleteButton = row.findViewById(R.id.item_delete_button);
 
+            boolean isOverdue = item.isOverdue();
+            String summary = LastTimeFormatter.getAppSummary(this, item.getLastRefreshedAtMillis());
             titleView.setText(item.getTitle());
-            summaryView.setText(LastTimeFormatter.getAppSummary(this, item.getLastRefreshedAtMillis()));
+            summaryView.setText(isOverdue ? getString(R.string.item_overdue_summary, summary) : summary);
+            titleView.setTextColor(getColor(isOverdue ? R.color.widget_overdue : R.color.widget_text_primary));
+            summaryView.setTextColor(getColor(isOverdue ? R.color.widget_overdue : R.color.widget_text_secondary));
 
             View.OnClickListener editClickListener = view -> showItemEditorDialog(item.getId());
             row.setOnClickListener(editClickListener);
@@ -118,9 +184,55 @@ public class MainActivity extends Activity {
                 }
             });
 
+            historyButton.setOnClickListener(view -> showHistoryDialog(item.getId()));
             deleteButton.setOnClickListener(view -> confirmDeleteItem(item.getId()));
             itemsContainer.addView(row);
         }
+    }
+
+    private List<LastTimeItem> getSortedAppItems(List<LastTimeItem> items) {
+        List<LastTimeItem> sortedItems = new ArrayList<>(items);
+
+        if (selectedSortOrder == SORT_OLDEST_UPDATED) {
+            Collections.sort(sortedItems, (left, right) -> compareByLastUpdated(left, right, true));
+            return sortedItems;
+        }
+
+        if (selectedSortOrder == SORT_ALPHABETICAL) {
+            Collections.sort(sortedItems, this::compareByTitle);
+            return sortedItems;
+        }
+
+        Collections.sort(sortedItems, (left, right) -> compareByLastUpdated(left, right, false));
+        return sortedItems;
+    }
+
+    private int compareByLastUpdated(LastTimeItem left, LastTimeItem right, boolean oldestFirst) {
+        int lastUpdatedComparison = oldestFirst
+                ? Long.compare(left.getLastRefreshedAtMillis(), right.getLastRefreshedAtMillis())
+                : Long.compare(right.getLastRefreshedAtMillis(), left.getLastRefreshedAtMillis());
+
+        if (lastUpdatedComparison != 0) {
+            return lastUpdatedComparison;
+        }
+
+        return compareByTitle(left, right);
+    }
+
+    private int compareByTitle(LastTimeItem left, LastTimeItem right) {
+        int titleComparison = String.CASE_INSENSITIVE_ORDER.compare(left.getTitle(), right.getTitle());
+
+        if (titleComparison != 0) {
+            return titleComparison;
+        }
+
+        titleComparison = left.getTitle().compareTo(right.getTitle());
+
+        if (titleComparison != 0) {
+            return titleComparison;
+        }
+
+        return left.getId().compareTo(right.getId());
     }
 
     private void showItemEditorDialog(String itemId) {
@@ -136,14 +248,35 @@ public class MainActivity extends Activity {
         titleInput.setHint(R.string.item_dialog_hint);
         titleInput.setSingleLine();
 
+        EditText intervalInput = new EditText(this);
+        intervalInput.setHint(R.string.item_interval_hint);
+        intervalInput.setInputType(InputType.TYPE_CLASS_NUMBER);
+        intervalInput.setSingleLine();
+
+        LinearLayout dialogContent = new LinearLayout(this);
+        dialogContent.setOrientation(LinearLayout.VERTICAL);
+        dialogContent.addView(titleInput);
+
+        LinearLayout.LayoutParams intervalLayoutParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        intervalLayoutParams.topMargin = dpToPx(8);
+        dialogContent.addView(intervalInput, intervalLayoutParams);
+
         if (existingItem != null) {
             titleInput.setText(existingItem.getTitle());
             titleInput.setSelection(titleInput.getText().length());
+
+            if (existingItem.getIntervalDays() > 0) {
+                intervalInput.setText(String.valueOf(existingItem.getIntervalDays()));
+                intervalInput.setSelection(intervalInput.getText().length());
+            }
         }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this)
                 .setTitle(existingItem == null ? R.string.dialog_add_title : R.string.dialog_edit_title)
-                .setView(titleInput)
+                .setView(dialogContent)
                 .setPositiveButton(existingItem == null ? R.string.add_item_button : R.string.save_item_button, null)
                 .setNegativeButton(android.R.string.cancel, null);
 
@@ -164,11 +297,18 @@ public class MainActivity extends Activity {
                     return;
                 }
 
+                int intervalDays = getIntervalDaysFromInput(intervalInput);
+
+                if (intervalDays < 0) {
+                    intervalInput.setError(getString(R.string.item_interval_invalid));
+                    return;
+                }
+
                 if (dialogItem == null) {
-                    LastTimeStorage.addItem(this, title);
+                    LastTimeStorage.addItem(this, title, intervalDays);
                     Log.d(LOG_TAG, "Tracked item added from app dialog");
                 } else {
-                    LastTimeStorage.updateItemTitle(this, dialogItem.getId(), title);
+                    LastTimeStorage.updateItem(this, dialogItem.getId(), title, intervalDays);
                     Log.d(LOG_TAG, "Tracked item updated from app dialog: " + dialogItem.getId());
                 }
 
@@ -186,6 +326,500 @@ public class MainActivity extends Activity {
         });
 
         dialog.show();
+    }
+
+    private int getIntervalDaysFromInput(EditText intervalInput) {
+        String rawInterval = intervalInput.getText().toString().trim();
+
+        if (rawInterval.isEmpty()) {
+            return 0;
+        }
+
+        try {
+            long intervalDays = Long.parseLong(rawInterval);
+
+            if (intervalDays < 0L || intervalDays > Integer.MAX_VALUE) {
+                return -1;
+            }
+
+            return (int) intervalDays;
+        } catch (NumberFormatException exception) {
+            return -1;
+        }
+    }
+
+    private void showHistoryDialog(String itemId) {
+        LastTimeItem item = LastTimeStorage.getItem(this, itemId);
+
+        if (item == null) {
+            Log.d(LOG_TAG, "Tried to open history for missing item " + itemId);
+            syncItemsAndWidget();
+            return;
+        }
+
+        View historyView = LayoutInflater.from(this).inflate(R.layout.dialog_item_history, null, false);
+        final LocalDate[] visibleMonthStart = new LocalDate[] { LocalDate.now(ZoneId.systemDefault()).withDayOfMonth(1) };
+        final int[] pendingSlideDirection = new int[] { 0 };
+        final Runnable[] refreshHistoryDialog = new Runnable[1];
+        refreshHistoryDialog[0] = () -> bindHistoryDialog(itemId, historyView, visibleMonthStart, pendingSlideDirection, refreshHistoryDialog[0]);
+        refreshHistoryDialog[0].run();
+
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.history_dialog_title)
+                .setView(historyView)
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
+    }
+
+    private void bindHistoryDialog(
+            String itemId,
+            View historyView,
+            LocalDate[] visibleMonthStart,
+            int[] pendingSlideDirection,
+            Runnable refreshAction
+    ) {
+        LastTimeItem item = LastTimeStorage.getItem(this, itemId);
+
+        if (item == null) {
+            return;
+        }
+
+        TextView titleView = historyView.findViewById(R.id.history_item_title);
+        TextView summaryView = historyView.findViewById(R.id.history_item_summary);
+        Button previousMonthButton = historyView.findViewById(R.id.history_previous_month_button);
+        TextView monthLabelView = historyView.findViewById(R.id.history_calendar_month_label);
+        Button nextMonthButton = historyView.findViewById(R.id.history_next_month_button);
+        LinearLayout weekdayHeaderContainer = historyView.findViewById(R.id.history_weekday_header_container);
+        LinearLayout calendarContainer = historyView.findViewById(R.id.history_calendar_container);
+        TextView calendarCaptionView = historyView.findViewById(R.id.history_calendar_caption);
+        Button pickDateButton = historyView.findViewById(R.id.history_pick_date_button);
+        LinearLayout recentEventsContainer = historyView.findViewById(R.id.history_recent_events_container);
+
+        List<LocalDate> refreshHistoryDates = item.getRefreshHistoryDates();
+        LocalDate today = LocalDate.now(ZoneId.systemDefault());
+        LocalDate minimumMonthStart = HISTORY_START_DATE.withDayOfMonth(1);
+        LocalDate currentMonthStart = today.withDayOfMonth(1);
+
+        if (visibleMonthStart[0].isBefore(minimumMonthStart)) {
+            visibleMonthStart[0] = minimumMonthStart;
+        } else if (visibleMonthStart[0].isAfter(currentMonthStart)) {
+            visibleMonthStart[0] = currentMonthStart;
+        }
+
+        titleView.setText(item.getTitle());
+        summaryView.setText(getString(
+                R.string.history_dialog_summary,
+                refreshHistoryDates.size(),
+                LastTimeFormatter.getAppSummary(this, item.getLastRefreshedAtMillis())
+        ));
+
+        monthLabelView.setText(getMonthLabel(visibleMonthStart[0]));
+        previousMonthButton.setEnabled(visibleMonthStart[0].isAfter(minimumMonthStart));
+        previousMonthButton.setOnClickListener(view -> showPreviousHistoryMonth(visibleMonthStart, minimumMonthStart, pendingSlideDirection, refreshAction));
+        nextMonthButton.setEnabled(visibleMonthStart[0].isBefore(currentMonthStart));
+        nextMonthButton.setOnClickListener(view -> showNextHistoryMonth(visibleMonthStart, currentMonthStart, pendingSlideDirection, refreshAction));
+
+        View.OnTouchListener monthSwipeListener = buildHistoryMonthSwipeListener(
+                visibleMonthStart,
+                minimumMonthStart,
+                currentMonthStart,
+                pendingSlideDirection,
+                refreshAction
+        );
+
+        renderWeekdayHeader(weekdayHeaderContainer);
+        renderHistoryCalendar(calendarContainer, itemId, refreshHistoryDates, visibleMonthStart[0], HISTORY_START_DATE, today, refreshAction);
+        applyHistoryMonthSwipeListener(weekdayHeaderContainer, monthSwipeListener);
+        applyHistoryMonthSwipeListener(calendarContainer, monthSwipeListener);
+        animateHistoryMonthChange(monthLabelView, weekdayHeaderContainer, calendarContainer, pendingSlideDirection);
+        calendarCaptionView.setText(getString(
+                R.string.history_calendar_caption,
+                LastTimeFormatter.getDateLabel(HISTORY_START_DATE),
+                LastTimeFormatter.getDateLabel(today)
+        ));
+        pickDateButton.setOnClickListener(view -> showHistoryDatePicker(item, visibleMonthStart, refreshAction));
+        renderRecentEvents(recentEventsContainer, refreshHistoryDates);
+    }
+
+    private View.OnTouchListener buildHistoryMonthSwipeListener(
+            LocalDate[] visibleMonthStart,
+            LocalDate minimumMonthStart,
+            LocalDate currentMonthStart,
+            int[] pendingSlideDirection,
+            Runnable refreshAction
+    ) {
+        float minimumSwipeDistance = dpToPx(HISTORY_MONTH_SWIPE_MIN_DISTANCE_DP);
+        float[] touchStartX = new float[1];
+        float[] touchStartY = new float[1];
+        boolean[] isHorizontalSwipe = new boolean[1];
+
+        return (view, event) -> {
+            if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                touchStartX[0] = event.getX();
+                touchStartY[0] = event.getY();
+                isHorizontalSwipe[0] = false;
+                return false;
+            }
+
+            if (event.getActionMasked() == MotionEvent.ACTION_MOVE) {
+                float deltaX = event.getX() - touchStartX[0];
+                float deltaY = event.getY() - touchStartY[0];
+
+                if (Math.abs(deltaX) >= minimumSwipeDistance && Math.abs(deltaX) > Math.abs(deltaY)) {
+                    isHorizontalSwipe[0] = true;
+                    setParentInterceptAllowed(view, false);
+                    return true;
+                }
+
+                return false;
+            }
+
+            if (event.getActionMasked() != MotionEvent.ACTION_UP) {
+                if (event.getActionMasked() == MotionEvent.ACTION_CANCEL) {
+                    isHorizontalSwipe[0] = false;
+                    setParentInterceptAllowed(view, true);
+                }
+
+                return false;
+            }
+
+            float deltaX = event.getX() - touchStartX[0];
+            float deltaY = event.getY() - touchStartY[0];
+
+            if (!isHorizontalSwipe[0]
+                    || Math.abs(deltaX) < minimumSwipeDistance
+                    || Math.abs(deltaX) <= Math.abs(deltaY)) {
+                setParentInterceptAllowed(view, true);
+                return false;
+            }
+
+            setParentInterceptAllowed(view, true);
+
+            if (deltaX < 0) {
+                return showNextHistoryMonth(visibleMonthStart, currentMonthStart, pendingSlideDirection, refreshAction);
+            }
+
+            return showPreviousHistoryMonth(visibleMonthStart, minimumMonthStart, pendingSlideDirection, refreshAction);
+        };
+    }
+
+    private void animateHistoryMonthChange(
+            TextView monthLabelView,
+            LinearLayout weekdayHeaderContainer,
+            LinearLayout calendarContainer,
+            int[] pendingSlideDirection
+    ) {
+        if (pendingSlideDirection[0] == 0) {
+            return;
+        }
+
+        int slideDirection = pendingSlideDirection[0];
+        pendingSlideDirection[0] = 0;
+
+        animateHistoryMonthView(monthLabelView, slideDirection);
+        animateHistoryMonthView(weekdayHeaderContainer, slideDirection);
+        animateHistoryMonthView(calendarContainer, slideDirection);
+    }
+
+    private void animateHistoryMonthView(View view, int slideDirection) {
+        view.animate().cancel();
+        view.post(() -> {
+            float slideDistance = view.getWidth() > 0 ? view.getWidth() : dpToPx(240);
+
+            view.setAlpha(0.35f);
+            view.setTranslationX(slideDirection * slideDistance);
+            view.animate()
+                    .translationX(0f)
+                    .alpha(1f)
+                    .setDuration(HISTORY_MONTH_SLIDE_DURATION_MS)
+                    .start();
+        });
+    }
+
+    private void setParentInterceptAllowed(View view, boolean isAllowed) {
+        ViewParent parent = view.getParent();
+
+        while (parent != null) {
+            parent.requestDisallowInterceptTouchEvent(!isAllowed);
+            parent = parent.getParent();
+        }
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private void applyHistoryMonthSwipeListener(View view, View.OnTouchListener monthSwipeListener) {
+        view.setOnTouchListener(monthSwipeListener);
+
+        if (!(view instanceof LinearLayout)) {
+            return;
+        }
+
+        LinearLayout container = (LinearLayout) view;
+
+        for (int childIndex = 0; childIndex < container.getChildCount(); childIndex++) {
+            applyHistoryMonthSwipeListener(container.getChildAt(childIndex), monthSwipeListener);
+        }
+    }
+
+    private boolean showPreviousHistoryMonth(
+            LocalDate[] visibleMonthStart,
+            LocalDate minimumMonthStart,
+            int[] pendingSlideDirection,
+            Runnable refreshAction
+    ) {
+        if (!visibleMonthStart[0].isAfter(minimumMonthStart)) {
+            return false;
+        }
+
+        visibleMonthStart[0] = visibleMonthStart[0].minusMonths(1);
+        pendingSlideDirection[0] = -1;
+        refreshAction.run();
+        return true;
+    }
+
+    private boolean showNextHistoryMonth(
+            LocalDate[] visibleMonthStart,
+            LocalDate currentMonthStart,
+            int[] pendingSlideDirection,
+            Runnable refreshAction
+    ) {
+        if (!visibleMonthStart[0].isBefore(currentMonthStart)) {
+            return false;
+        }
+
+        visibleMonthStart[0] = visibleMonthStart[0].plusMonths(1);
+        pendingSlideDirection[0] = 1;
+        refreshAction.run();
+        return true;
+    }
+
+    private void showHistoryDatePicker(LastTimeItem item, LocalDate[] visibleMonthStart, Runnable refreshAction) {
+        LocalDate today = LocalDate.now(ZoneId.systemDefault());
+        LocalDate initialDate = item.getLastRefreshedAtMillis() > 0L
+                ? LastTimeFormatter.getLocalDate(item.getLastRefreshedAtMillis())
+                : today;
+
+        DatePickerDialog dialog = new DatePickerDialog(
+                this,
+                (view, year, month, dayOfMonth) -> {
+                    LocalDate selectedDate = LocalDate.of(year, month + 1, dayOfMonth);
+
+                    if (LastTimeStorage.toggleRefreshDay(this, item.getId(), selectedDate)) {
+                        Log.d(LOG_TAG, "Toggled item history day from picker: " + item.getId() + " on " + selectedDate);
+                        visibleMonthStart[0] = selectedDate.withDayOfMonth(1);
+                        syncItemsAndWidget();
+                        refreshAction.run();
+                    }
+                },
+                initialDate.getYear(),
+                initialDate.getMonthValue() - 1,
+                initialDate.getDayOfMonth()
+        );
+        dialog.getDatePicker().setMinDate(LastTimeFormatter.getStartOfDayMillis(HISTORY_START_DATE));
+        dialog.getDatePicker().setMaxDate(System.currentTimeMillis());
+        dialog.show();
+    }
+
+    private void renderWeekdayHeader(LinearLayout container) {
+        container.removeAllViews();
+        DayOfWeek[] days = new DayOfWeek[] {
+                DayOfWeek.SUNDAY,
+                DayOfWeek.MONDAY,
+                DayOfWeek.TUESDAY,
+                DayOfWeek.WEDNESDAY,
+                DayOfWeek.THURSDAY,
+                DayOfWeek.FRIDAY,
+                DayOfWeek.SATURDAY
+        };
+
+        for (int index = 0; index < days.length; index++) {
+            TextView headerView = new TextView(this);
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+
+            if (index > 0) {
+                layoutParams.setMarginStart(dpToPx(6));
+            }
+
+            headerView.setLayoutParams(layoutParams);
+            headerView.setGravity(Gravity.CENTER);
+            headerView.setText(days[index].getDisplayName(TextStyle.NARROW, Locale.getDefault()));
+            headerView.setTextColor(getColor(R.color.widget_text_muted));
+            headerView.setTextSize(12f);
+            container.addView(headerView);
+        }
+    }
+
+    private void renderHistoryCalendar(
+            LinearLayout container,
+            String itemId,
+            List<LocalDate> refreshHistoryDates,
+            LocalDate visibleMonthStart,
+            LocalDate minimumDate,
+            LocalDate today,
+            Runnable refreshAction
+    ) {
+        container.removeAllViews();
+        LocalDate calendarStart = visibleMonthStart.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY));
+        LocalDate calendarEnd = visibleMonthStart
+                .with(TemporalAdjusters.lastDayOfMonth())
+                .with(TemporalAdjusters.nextOrSame(DayOfWeek.SATURDAY));
+        int weekCount = (int) ChronoUnit.WEEKS.between(
+                calendarStart,
+                calendarEnd
+        ) + 1;
+
+        for (int weekIndex = 0; weekIndex < weekCount; weekIndex++) {
+            LocalDate weekStart = calendarStart.plusWeeks(weekIndex);
+
+            LinearLayout weekRow = new LinearLayout(this);
+            LinearLayout.LayoutParams weekLayoutParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+
+            if (weekIndex > 0) {
+                weekLayoutParams.topMargin = dpToPx(6);
+            }
+
+            weekRow.setLayoutParams(weekLayoutParams);
+            weekRow.setOrientation(LinearLayout.HORIZONTAL);
+
+            for (int dayIndex = 0; dayIndex < 7; dayIndex++) {
+                LocalDate date = weekStart.plusDays(dayIndex);
+                TextView dayView = buildHistoryDayView(
+                        itemId,
+                        date,
+                        visibleMonthStart,
+                        minimumDate,
+                        today,
+                        refreshHistoryDates.contains(date),
+                        refreshAction
+                );
+                weekRow.addView(dayView);
+            }
+
+            container.addView(weekRow);
+        }
+    }
+
+    private String getMonthLabel(LocalDate monthDate) {
+        return monthDate.getMonth().getDisplayName(TextStyle.FULL, Locale.getDefault()) + " " + monthDate.getYear();
+    }
+
+    private TextView buildHistoryDayView(
+            String itemId,
+            LocalDate date,
+            LocalDate visibleMonthStart,
+            LocalDate minimumDate,
+            LocalDate today,
+            boolean isRecorded,
+            Runnable refreshAction
+    ) {
+        TextView dayView = new TextView(this);
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(0, dpToPx(34), 1f);
+
+        if (date.getDayOfWeek() != DayOfWeek.SUNDAY) {
+            layoutParams.setMarginStart(dpToPx(6));
+        }
+
+        dayView.setLayoutParams(layoutParams);
+        dayView.setGravity(Gravity.CENTER);
+        dayView.setTextSize(12f);
+
+        if (date.getMonth() != visibleMonthStart.getMonth()
+                || date.getYear() != visibleMonthStart.getYear()
+                || date.isBefore(minimumDate)
+                || date.isAfter(today)) {
+            dayView.setText("");
+            dayView.setBackgroundResource(R.drawable.history_day_future);
+            return dayView;
+        }
+
+        dayView.setText(String.valueOf(date.getDayOfMonth()));
+        dayView.setClickable(true);
+        dayView.setFocusable(true);
+
+        if (isRecorded) {
+            dayView.setBackgroundResource(R.drawable.history_day_active);
+            dayView.setTextColor(getColor(android.R.color.white));
+            dayView.setContentDescription(getString(
+                    R.string.history_day_refreshed_description,
+                    LastTimeFormatter.getDateLabel(date)
+            ));
+        } else {
+            dayView.setBackgroundResource(R.drawable.history_day_inactive);
+            dayView.setTextColor(getColor(R.color.widget_text_secondary));
+            dayView.setContentDescription(getString(
+                    R.string.history_day_empty_description,
+                    LastTimeFormatter.getDateLabel(date)
+            ));
+        }
+
+        dayView.setOnClickListener(view -> {
+            if (LastTimeStorage.toggleRefreshDay(this, itemId, date)) {
+                Log.d(LOG_TAG, "Toggled item history day from calendar: " + itemId + " on " + date);
+                syncItemsAndWidget();
+                refreshAction.run();
+            }
+        });
+
+        return dayView;
+    }
+
+    private void renderRecentEvents(LinearLayout container, List<LocalDate> refreshHistoryDates) {
+        container.removeAllViews();
+
+        if (refreshHistoryDates.isEmpty()) {
+            TextView emptyView = new TextView(this);
+            emptyView.setText(R.string.history_no_recent_events);
+            emptyView.setTextColor(getColor(R.color.widget_text_secondary));
+            emptyView.setTextSize(14f);
+            container.addView(emptyView);
+            return;
+        }
+
+        int startIndex = Math.max(0, refreshHistoryDates.size() - RECENT_EVENT_COUNT);
+
+        for (int index = refreshHistoryDates.size() - 1; index >= startIndex; index--) {
+            TextView eventView = new TextView(this);
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+
+            if (index < refreshHistoryDates.size() - 1) {
+                layoutParams.topMargin = dpToPx(8);
+            }
+
+            eventView.setLayoutParams(layoutParams);
+            eventView.setLineSpacing(0f, 1.1f);
+            eventView.setTextColor(getColor(R.color.widget_text_secondary));
+            eventView.setTextSize(14f);
+            eventView.setText(getString(
+                    R.string.history_recent_event_row,
+                    LastTimeFormatter.getDateLabel(refreshHistoryDates.get(index))
+            ));
+            container.addView(eventView);
+        }
+
+        int olderEventCount = startIndex;
+
+        if (olderEventCount > 0) {
+            TextView olderEventsView = new TextView(this);
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            layoutParams.topMargin = dpToPx(10);
+            olderEventsView.setLayoutParams(layoutParams);
+            olderEventsView.setTextColor(getColor(R.color.widget_text_muted));
+            olderEventsView.setTextSize(13f);
+            olderEventsView.setText(getString(R.string.history_more_events, olderEventCount));
+            container.addView(olderEventsView);
+        }
+    }
+
+    private int dpToPx(int valueInDp) {
+        return Math.round(valueInDp * getResources().getDisplayMetrics().density);
     }
 
     private void confirmDeleteItem(String itemId) {

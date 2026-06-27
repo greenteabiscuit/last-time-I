@@ -4,8 +4,9 @@ This project is a standalone Android widget app for remembering the last time so
 
 The current MVP is built around a practical `RemoteViews` pattern:
 
-- show 6 tracked items in a large home-screen widget
+- show 10 tracked items in a large home-screen widget
 - show the number of days since each item was last refreshed
+- optionally flag an item as overdue after its expected interval in days has passed
 - let the widget reset a single item to today with one tap
 - use the companion app for add, edit, and delete flows
 
@@ -20,7 +21,7 @@ The seed list starts with these examples:
 - Had my nose congested
 - Had painful acne somewhere on my body
 
-The app stores a timestamp for each item and turns it into a day count on both the widget and the companion screen.
+The app stores a timestamp and optional interval in days for each item, then turns that into a day count on both the widget and the companion screen. Items with an interval are highlighted as overdue when the days-since count is greater than the interval.
 
 ## What Is Here
 
@@ -90,4 +91,5 @@ Capture filtered logs like this:
 
 - The widget intentionally uses classic `RemoteViews`, not Glance/Compose, to keep the interaction model small and stable.
 - `SharedPreferences` is enough for the first version because this app is tracking one small ordered list of personal reminders.
-- If the list grows beyond 6 items, the widget shows the first 6 and a `+N more in app` indicator.
+- Item JSON includes `intervalDays`; missing or `0` means no overdue highlighting.
+- If the list grows beyond 10 items, the widget shows the first 10 and a `+N more in app` indicator.

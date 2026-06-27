@@ -16,9 +16,31 @@
     <string name="dialog_add_title">Add "Last time I..." item</string>
     <string name="dialog_edit_title">Edit "Last time I..." item</string>
     <string name="item_dialog_hint">e.g. Changed my toothbrush</string>
+    <string name="item_interval_hint">Interval in days (optional)</string>
     <string name="item_title_required">Enter an item name.</string>
+    <string name="item_interval_invalid">Enter a whole number of days, or leave it empty.</string>
+    <string name="item_overdue_summary">⚠ Overdue · %1$s</string>
+    <string name="sort_latest_updated">Latest updated</string>
+    <string name="sort_oldest_updated">Oldest updated</string>
+    <string name="sort_alphabetical">A to Z</string>
+    <string name="history_item_button">History</string>
+    <string name="history_dialog_title">Refresh history</string>
+    <string name="history_dialog_summary">%1$d recorded day(s). %2$s</string>
+    <string name="history_calendar_section_title">Calendar</string>
+    <string name="history_previous_month_button">Prev</string>
+    <string name="history_next_month_button">Next</string>
+    <string name="history_calendar_caption">Swipe the calendar or use Prev/Next to browse %1$s through %2$s. Tap a day to add or remove it.</string>
+    <string name="history_pick_date_button">Pick Date</string>
+    <string name="history_edit_hint">Use Pick Date to jump directly to a day from 2020 through today.</string>
+    <string name="history_recent_section_title">Recent recorded days</string>
+    <string name="history_no_recent_events">No recorded days yet.</string>
+    <string name="history_recent_event_row">- %1$s</string>
+    <string name="history_more_events">+%1$d older recorded day(s)</string>
+    <string name="history_day_refreshed_description">%1$s is recorded</string>
+    <string name="history_day_empty_description">%1$s had no refreshes</string>
     <string name="delete_item_confirmation">Delete "%1$s"?</string>
     <string name="last_seen_summary">Last happened %1$s · %2$s</string>
+    <string name="last_seen_summary_never">Not recorded yet</string>
 
     <string name="widget_title">Last time I...</string>
     <string name="widget_add_button">Add</string>
@@ -30,8 +52,10 @@
     <string name="widget_summary_tracking">%1$d tracked</string>
     <string name="widget_more_items">+%1$d more in app</string>
     <string name="widget_empty_state">No tracked items yet. Tap Add to start.</string>
+    <string name="widget_overdue_day_count">⚠ %1$s</string>
 
     <string name="day_count_today">Today</string>
     <string name="day_count_single">1 day</string>
     <string name="day_count_plural">%1$d days</string>
+    <string name="day_count_never">Not yet</string>
 </resources>

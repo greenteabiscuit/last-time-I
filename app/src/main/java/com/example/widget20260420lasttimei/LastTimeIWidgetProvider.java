@@ -11,6 +11,8 @@ import android.view.View;
 import android.widget.RemoteViews;
 
 import java.text.DateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -21,7 +23,7 @@ public class LastTimeIWidgetProvider extends AppWidgetProvider {
     public static final String ACTION_OPEN_ADD_ITEM = "com.example.widget20260420lasttimei.action.OPEN_ADD_ITEM";
     public static final String ACTION_OPEN_EDIT_ITEM = "com.example.widget20260420lasttimei.action.OPEN_EDIT_ITEM";
     public static final String EXTRA_ITEM_ID = "com.example.widget20260420lasttimei.extra.ITEM_ID";
-    private static final int VISIBLE_ITEM_COUNT = 6;
+    private static final int VISIBLE_ITEM_COUNT = 8;
 
     private static final int[] ROW_IDS = new int[] {
             R.id.widget_row_1,
@@ -29,7 +31,11 @@ public class LastTimeIWidgetProvider extends AppWidgetProvider {
             R.id.widget_row_3,
             R.id.widget_row_4,
             R.id.widget_row_5,
-            R.id.widget_row_6
+            R.id.widget_row_6,
+            R.id.widget_row_7,
+            R.id.widget_row_8,
+            R.id.widget_row_9,
+            R.id.widget_row_10
     };
 
     private static final int[] TITLE_IDS = new int[] {
@@ -38,7 +44,11 @@ public class LastTimeIWidgetProvider extends AppWidgetProvider {
             R.id.widget_row_3_title,
             R.id.widget_row_4_title,
             R.id.widget_row_5_title,
-            R.id.widget_row_6_title
+            R.id.widget_row_6_title,
+            R.id.widget_row_7_title,
+            R.id.widget_row_8_title,
+            R.id.widget_row_9_title,
+            R.id.widget_row_10_title
     };
 
     private static final int[] DAYS_IDS = new int[] {
@@ -47,7 +57,11 @@ public class LastTimeIWidgetProvider extends AppWidgetProvider {
             R.id.widget_row_3_days,
             R.id.widget_row_4_days,
             R.id.widget_row_5_days,
-            R.id.widget_row_6_days
+            R.id.widget_row_6_days,
+            R.id.widget_row_7_days,
+            R.id.widget_row_8_days,
+            R.id.widget_row_9_days,
+            R.id.widget_row_10_days
     };
 
     private static final int[] REFRESH_BUTTON_IDS = new int[] {
@@ -56,7 +70,11 @@ public class LastTimeIWidgetProvider extends AppWidgetProvider {
             R.id.widget_row_3_refresh,
             R.id.widget_row_4_refresh,
             R.id.widget_row_5_refresh,
-            R.id.widget_row_6_refresh
+            R.id.widget_row_6_refresh,
+            R.id.widget_row_7_refresh,
+            R.id.widget_row_8_refresh,
+            R.id.widget_row_9_refresh,
+            R.id.widget_row_10_refresh
     };
 
     @Override
@@ -126,7 +144,7 @@ public class LastTimeIWidgetProvider extends AppWidgetProvider {
 
     private static void updateSingleWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_last_time_i);
-        List<LastTimeItem> items = LastTimeStorage.getItems(context);
+        List<LastTimeItem> items = getRecentlyUpdatedItems(context);
         String updatedAt = DateFormat.getTimeInstance(DateFormat.SHORT).format(new Date());
 
         Log.d(LOG_TAG, "Updating widget id=" + appWidgetId + " with " + items.size() + " tracked item(s) at " + updatedAt);
@@ -144,16 +162,20 @@ public class LastTimeIWidgetProvider extends AppWidgetProvider {
 
         int visibleCount = Math.min(items.size(), VISIBLE_ITEM_COUNT);
 
-        for (int index = 0; index < VISIBLE_ITEM_COUNT; index++) {
+        for (int index = 0; index < ROW_IDS.length; index++) {
             if (index >= visibleCount) {
                 views.setViewVisibility(ROW_IDS[index], View.GONE);
                 continue;
             }
 
             LastTimeItem item = items.get(index);
+            boolean isOverdue = item.isOverdue();
+            String dayCountLabel = LastTimeFormatter.getDayCountLabel(context, item.getLastRefreshedAtMillis());
             views.setViewVisibility(ROW_IDS[index], View.VISIBLE);
             views.setTextViewText(TITLE_IDS[index], item.getTitle());
-            views.setTextViewText(DAYS_IDS[index], LastTimeFormatter.getDayCountLabel(context, item.getLastRefreshedAtMillis()));
+            views.setTextViewText(DAYS_IDS[index], isOverdue ? context.getString(R.string.widget_overdue_day_count, dayCountLabel) : dayCountLabel);
+            views.setTextColor(TITLE_IDS[index], context.getColor(isOverdue ? R.color.widget_overdue : R.color.widget_text_primary));
+            views.setTextColor(DAYS_IDS[index], context.getColor(isOverdue ? R.color.widget_overdue : R.color.widget_text_secondary));
             views.setOnClickPendingIntent(TITLE_IDS[index], createOpenAppPendingIntent(context, buildRequestCode(appWidgetId, 300 + index), ACTION_OPEN_EDIT_ITEM, item.getId()));
             views.setOnClickPendingIntent(DAYS_IDS[index], createOpenAppPendingIntent(context, buildRequestCode(appWidgetId, 400 + index), ACTION_OPEN_EDIT_ITEM, item.getId()));
             views.setOnClickPendingIntent(REFRESH_BUTTON_IDS[index], createMarkNowPendingIntent(context, appWidgetId, index, item.getId()));
@@ -172,6 +194,12 @@ public class LastTimeIWidgetProvider extends AppWidgetProvider {
         views.setOnClickPendingIntent(R.id.widget_open_app_button, createOpenAppPendingIntent(context, buildRequestCode(appWidgetId, 20), null, null));
 
         appWidgetManager.updateAppWidget(appWidgetId, views);
+    }
+
+    private static List<LastTimeItem> getRecentlyUpdatedItems(Context context) {
+        List<LastTimeItem> items = new ArrayList<>(LastTimeStorage.getItems(context));
+        Collections.sort(items, (left, right) -> Long.compare(right.getLastRefreshedAtMillis(), left.getLastRefreshedAtMillis()));
+        return items;
     }
 
     private static String buildSummaryText(Context context, int totalCount) {

@@ -7,6 +7,7 @@ import android.util.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -31,9 +32,20 @@ public final class LastTimeStorage {
         try {
             JSONArray jsonArray = new JSONArray(rawJson);
             List<LastTimeItem> items = new ArrayList<>(jsonArray.length());
+            boolean needsHistoryMigration = false;
 
             for (int index = 0; index < jsonArray.length(); index++) {
-                items.add(LastTimeItem.fromJson(jsonArray.getJSONObject(index)));
+                org.json.JSONObject jsonObject = jsonArray.getJSONObject(index);
+
+                if (!LastTimeItem.hasRefreshHistory(jsonObject)) {
+                    needsHistoryMigration = true;
+                }
+
+                items.add(LastTimeItem.fromJson(jsonObject));
+            }
+
+            if (needsHistoryMigration) {
+                saveItems(context, items, "migrate items to include refresh history");
             }
 
             return items;
@@ -56,6 +68,10 @@ public final class LastTimeStorage {
     }
 
     public static LastTimeItem addItem(Context context, String rawTitle) {
+        return addItem(context, rawTitle, 0);
+    }
+
+    public static LastTimeItem addItem(Context context, String rawTitle, int intervalDays) {
         String title = sanitizeTitle(rawTitle);
 
         if (title == null) {
@@ -63,13 +79,23 @@ public final class LastTimeStorage {
         }
 
         List<LastTimeItem> items = getItems(context);
-        LastTimeItem item = LastTimeItem.create(title);
+        LastTimeItem item = LastTimeItem.create(title, intervalDays);
         items.add(item);
         saveItems(context, items, "add item " + item.getId());
         return item;
     }
 
     public static boolean updateItemTitle(Context context, String itemId, String rawTitle) {
+        LastTimeItem item = getItem(context, itemId);
+
+        if (item == null) {
+            return false;
+        }
+
+        return updateItem(context, itemId, rawTitle, item.getIntervalDays());
+    }
+
+    public static boolean updateItem(Context context, String itemId, String rawTitle, int intervalDays) {
         String title = sanitizeTitle(rawTitle);
 
         if (title == null) {
@@ -81,7 +107,8 @@ public final class LastTimeStorage {
         for (LastTimeItem item : items) {
             if (item.getId().equals(itemId)) {
                 item.setTitle(title);
-                saveItems(context, items, "update item title " + itemId);
+                item.setIntervalDays(intervalDays);
+                saveItems(context, items, "update item " + itemId);
                 return true;
             }
         }
@@ -105,12 +132,26 @@ public final class LastTimeStorage {
 
     public static boolean markNow(Context context, String itemId) {
         List<LastTimeItem> items = getItems(context);
-        long now = System.currentTimeMillis();
+        LocalDate today = LocalDate.now();
 
         for (LastTimeItem item : items) {
             if (item.getId().equals(itemId)) {
-                item.setLastRefreshedAtMillis(now);
+                item.recordRefreshOn(today);
                 saveItems(context, items, "mark now for item " + itemId);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static boolean toggleRefreshDay(Context context, String itemId, LocalDate refreshDate) {
+        List<LastTimeItem> items = getItems(context);
+
+        for (LastTimeItem item : items) {
+            if (item.getId().equals(itemId)) {
+                item.toggleRefreshOn(refreshDate);
+                saveItems(context, items, "toggle refresh day " + refreshDate + " for item " + itemId);
                 return true;
             }
         }
