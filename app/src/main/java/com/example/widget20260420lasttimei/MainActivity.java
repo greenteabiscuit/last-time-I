@@ -3,7 +3,6 @@ package com.example.widget20260420lasttimei;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -506,7 +505,6 @@ public class MainActivity extends Activity {
         LinearLayout weekdayHeaderContainer = historyView.findViewById(R.id.history_weekday_header_container);
         LinearLayout calendarContainer = historyView.findViewById(R.id.history_calendar_container);
         TextView calendarCaptionView = historyView.findViewById(R.id.history_calendar_caption);
-        Button pickDateButton = historyView.findViewById(R.id.history_pick_date_button);
         LinearLayout recentEventsContainer = historyView.findViewById(R.id.history_recent_events_container);
 
         List<LocalDate> refreshHistoryDates = item.getRefreshHistoryDates();
@@ -551,7 +549,6 @@ public class MainActivity extends Activity {
                 LastTimeFormatter.getDateLabel(HISTORY_START_DATE),
                 LastTimeFormatter.getDateLabel(today)
         ));
-        pickDateButton.setOnClickListener(view -> showHistoryDatePicker(item, visibleMonthStart, refreshAction));
         renderRecentEvents(recentEventsContainer, refreshHistoryDates);
     }
 
@@ -704,33 +701,6 @@ public class MainActivity extends Activity {
         pendingSlideDirection[0] = 1;
         refreshAction.run();
         return true;
-    }
-
-    private void showHistoryDatePicker(LastTimeItem item, LocalDate[] visibleMonthStart, Runnable refreshAction) {
-        LocalDate today = LocalDate.now(ZoneId.systemDefault());
-        LocalDate initialDate = item.getLastRefreshedAtMillis() > 0L
-                ? LastTimeFormatter.getLocalDate(item.getLastRefreshedAtMillis())
-                : today;
-
-        DatePickerDialog dialog = new DatePickerDialog(
-                this,
-                (view, year, month, dayOfMonth) -> {
-                    LocalDate selectedDate = LocalDate.of(year, month + 1, dayOfMonth);
-
-                    if (LastTimeStorage.toggleRefreshDay(this, item.getId(), selectedDate)) {
-                        Log.d(LOG_TAG, "Toggled item history day from picker: " + item.getId() + " on " + selectedDate);
-                        visibleMonthStart[0] = selectedDate.withDayOfMonth(1);
-                        syncItemsAndWidget();
-                        refreshAction.run();
-                    }
-                },
-                initialDate.getYear(),
-                initialDate.getMonthValue() - 1,
-                initialDate.getDayOfMonth()
-        );
-        dialog.getDatePicker().setMinDate(LastTimeFormatter.getStartOfDayMillis(HISTORY_START_DATE));
-        dialog.getDatePicker().setMaxDate(System.currentTimeMillis());
-        dialog.show();
     }
 
     private void renderWeekdayHeader(LinearLayout container) {

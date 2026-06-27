@@ -91,22 +91,6 @@
             android:textColor="@color/widget_text_muted"
             android:textSize="13sp" />
 
-        <Button
-            android:id="@+id/history_pick_date_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="@string/history_pick_date_button" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:lineSpacingExtra="3dp"
-            android:text="@string/history_edit_hint"
-            android:textColor="@color/widget_text_muted"
-            android:textSize="13sp" />
-
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

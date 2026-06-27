@@ -34,8 +34,6 @@
     <string name="history_previous_month_button">Prev</string>
     <string name="history_next_month_button">Next</string>
     <string name="history_calendar_caption">Swipe the calendar or use Prev/Next to browse %1$s through %2$s. Tap a day to add or remove it.</string>
-    <string name="history_pick_date_button">Pick Date</string>
-    <string name="history_edit_hint">Use Pick Date to jump directly to a day from 2020 through today.</string>
     <string name="history_recent_section_title">Recent recorded days</string>
     <string name="history_no_recent_events">No recorded days yet.</string>
     <string name="history_recent_event_row">- %1$s</string>
