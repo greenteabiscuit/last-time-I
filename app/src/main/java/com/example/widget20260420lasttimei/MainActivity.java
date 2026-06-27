@@ -39,7 +39,9 @@ public class MainActivity extends Activity {
     private static final String LOG_TAG = "LastTimeIWidget";
     private static final LocalDate HISTORY_START_DATE = LocalDate.of(2020, 1, 1);
     private static final int RECENT_EVENT_COUNT = 6;
-    private static final int HISTORY_MONTH_SWIPE_MIN_DISTANCE_DP = 48;
+    private static final int HISTORY_MONTH_SWIPE_MIN_DISTANCE_DP = 28;
+    private static final int HISTORY_MONTH_SWIPE_INTERCEPT_DISTANCE_DP = 8;
+    private static final float HISTORY_MONTH_SWIPE_HORIZONTAL_RATIO = 0.65f;
     private static final int HISTORY_MONTH_SLIDE_DURATION_MS = 180;
     private static final int SORT_LATEST_UPDATED = 0;
     private static final int SORT_OLDEST_UPDATED = 1;
@@ -560,6 +562,7 @@ public class MainActivity extends Activity {
             Runnable refreshAction
     ) {
         float minimumSwipeDistance = dpToPx(HISTORY_MONTH_SWIPE_MIN_DISTANCE_DP);
+        float interceptDistance = dpToPx(HISTORY_MONTH_SWIPE_INTERCEPT_DISTANCE_DP);
         float[] touchStartX = new float[1];
         float[] touchStartY = new float[1];
         boolean[] isHorizontalSwipe = new boolean[1];
@@ -569,20 +572,19 @@ public class MainActivity extends Activity {
                 touchStartX[0] = event.getX();
                 touchStartY[0] = event.getY();
                 isHorizontalSwipe[0] = false;
-                return false;
+                return true;
             }
 
             if (event.getActionMasked() == MotionEvent.ACTION_MOVE) {
                 float deltaX = event.getX() - touchStartX[0];
                 float deltaY = event.getY() - touchStartY[0];
 
-                if (Math.abs(deltaX) >= minimumSwipeDistance && Math.abs(deltaX) > Math.abs(deltaY)) {
+                if (isMostlyHorizontalSwipe(deltaX, deltaY, interceptDistance)) {
                     isHorizontalSwipe[0] = true;
                     setParentInterceptAllowed(view, false);
-                    return true;
                 }
 
-                return false;
+                return true;
             }
 
             if (event.getActionMasked() != MotionEvent.ACTION_UP) {
@@ -599,9 +601,10 @@ public class MainActivity extends Activity {
 
             if (!isHorizontalSwipe[0]
                     || Math.abs(deltaX) < minimumSwipeDistance
-                    || Math.abs(deltaX) <= Math.abs(deltaY)) {
+                    || !isMostlyHorizontalSwipe(deltaX, deltaY, minimumSwipeDistance)) {
                 setParentInterceptAllowed(view, true);
-                return false;
+                view.performClick();
+                return true;
             }
 
             setParentInterceptAllowed(view, true);
@@ -612,6 +615,11 @@ public class MainActivity extends Activity {
 
             return showPreviousHistoryMonth(visibleMonthStart, minimumMonthStart, pendingSlideDirection, refreshAction);
         };
+    }
+
+    private boolean isMostlyHorizontalSwipe(float deltaX, float deltaY, float minimumDistance) {
+        return Math.abs(deltaX) >= minimumDistance
+                && Math.abs(deltaX) > Math.abs(deltaY) * HISTORY_MONTH_SWIPE_HORIZONTAL_RATIO;
     }
 
     private void animateHistoryMonthChange(
