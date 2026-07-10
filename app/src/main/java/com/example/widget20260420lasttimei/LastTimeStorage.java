@@ -32,20 +32,24 @@ public final class LastTimeStorage {
         try {
             JSONArray jsonArray = new JSONArray(rawJson);
             List<LastTimeItem> items = new ArrayList<>(jsonArray.length());
-            boolean needsHistoryMigration = false;
+            boolean needsMigration = false;
 
             for (int index = 0; index < jsonArray.length(); index++) {
                 org.json.JSONObject jsonObject = jsonArray.getJSONObject(index);
 
                 if (!LastTimeItem.hasRefreshHistory(jsonObject)) {
-                    needsHistoryMigration = true;
+                    needsMigration = true;
+                }
+
+                if (!LastTimeItem.hasTags(jsonObject)) {
+                    needsMigration = true;
                 }
 
                 items.add(LastTimeItem.fromJson(jsonObject));
             }
 
-            if (needsHistoryMigration) {
-                saveItems(context, items, "migrate items to include refresh history");
+            if (needsMigration) {
+                saveItems(context, items, "migrate stored items");
             }
 
             return items;
@@ -84,6 +88,14 @@ public final class LastTimeStorage {
     }
 
     public static LastTimeItem addItem(Context context, String rawTitle, int intervalDays) {
+        return addItem(context, rawTitle, intervalDays, new ArrayList<>());
+    }
+
+    public static LastTimeItem addItem(Context context, String rawTitle, int intervalDays, String rawTags) {
+        return addItem(context, rawTitle, intervalDays, LastTimeItem.parseTags(rawTags));
+    }
+
+    public static LastTimeItem addItem(Context context, String rawTitle, int intervalDays, List<String> tags) {
         String title = sanitizeTitle(rawTitle);
 
         if (title == null) {
@@ -91,7 +103,7 @@ public final class LastTimeStorage {
         }
 
         List<LastTimeItem> items = getItems(context);
-        LastTimeItem item = LastTimeItem.create(title, intervalDays);
+        LastTimeItem item = LastTimeItem.create(title, intervalDays, tags);
         items.add(item);
         saveItems(context, items, "add item " + item.getId());
         return item;
@@ -104,10 +116,24 @@ public final class LastTimeStorage {
             return false;
         }
 
-        return updateItem(context, itemId, rawTitle, item.getIntervalDays());
+        return updateItem(context, itemId, rawTitle, item.getIntervalDays(), item.getTags());
     }
 
     public static boolean updateItem(Context context, String itemId, String rawTitle, int intervalDays) {
+        LastTimeItem item = getItem(context, itemId);
+
+        if (item == null) {
+            return false;
+        }
+
+        return updateItem(context, itemId, rawTitle, intervalDays, item.getTags());
+    }
+
+    public static boolean updateItem(Context context, String itemId, String rawTitle, int intervalDays, String rawTags) {
+        return updateItem(context, itemId, rawTitle, intervalDays, LastTimeItem.parseTags(rawTags));
+    }
+
+    public static boolean updateItem(Context context, String itemId, String rawTitle, int intervalDays, List<String> tags) {
         String title = sanitizeTitle(rawTitle);
 
         if (title == null) {
@@ -123,6 +149,7 @@ public final class LastTimeStorage {
                 }
 
                 item.setTitle(title);
+                item.setTags(tags);
                 item.setIntervalDays(intervalDays);
                 saveItems(context, items, "update item " + itemId);
                 return true;

@@ -6,6 +6,7 @@
     <color name="widget_text_primary">#1F1A17</color>
     <color name="widget_text_secondary">#5A4E45</color>
     <color name="widget_text_muted">#8C8178</color>
+    <color name="tag_background">#E7E3DF</color>
     <color name="widget_accent">#2F7A4C</color>
     <color name="widget_overdue">#B3261E</color>
 </resources>

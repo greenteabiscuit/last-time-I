@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputType;
@@ -11,11 +12,13 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.inputmethod.EditorInfo;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewParent;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -189,6 +192,7 @@ public class MainActivity extends Activity {
             View row = layoutInflater.inflate(R.layout.last_time_item_row, itemsContainer, false);
             TextView titleView = row.findViewById(R.id.item_title);
             TextView summaryView = row.findViewById(R.id.item_summary);
+            TextView tagView = row.findViewById(R.id.item_tag);
             Button markTodayButton = row.findViewById(R.id.item_mark_today_button);
             Button historyButton = row.findViewById(R.id.item_history_button);
             Button editButton = row.findViewById(R.id.item_edit_button);
@@ -201,6 +205,9 @@ public class MainActivity extends Activity {
             summaryView.setText(getItemSummary(item, summary, isOverdue, isDeleted));
             titleView.setTextColor(getColor(getItemTitleColor(isOverdue, isDeleted)));
             summaryView.setTextColor(getColor(getItemSummaryColor(isOverdue, isDeleted)));
+            tagView.setText(formatTags(item.getTags()));
+            tagView.setTextColor(getColor(R.color.widget_text_muted));
+            tagView.setVisibility(item.hasTags() ? View.VISIBLE : View.GONE);
 
             View.OnClickListener editClickListener = view -> showItemEditorDialog(item.getId());
             row.setEnabled(!isDeleted);
@@ -208,6 +215,7 @@ public class MainActivity extends Activity {
             row.setOnClickListener(isDeleted ? null : editClickListener);
             titleView.setOnClickListener(isDeleted ? null : editClickListener);
             summaryView.setOnClickListener(isDeleted ? null : editClickListener);
+            tagView.setOnClickListener(isDeleted ? null : editClickListener);
             editButton.setEnabled(!isDeleted);
             editButton.setOnClickListener(isDeleted ? null : editClickListener);
             markTodayButton.setEnabled(!isDeleted);
@@ -271,12 +279,33 @@ public class MainActivity extends Activity {
         List<LastTimeItem> filteredItems = new ArrayList<>();
 
         for (LastTimeItem item : items) {
-            if (item.getTitle().toLowerCase(Locale.getDefault()).contains(normalizedQuery)) {
+            if (item.getTitle().toLowerCase(Locale.getDefault()).contains(normalizedQuery)
+                    || tagsContainQuery(item.getTags(), normalizedQuery)) {
                 filteredItems.add(item);
             }
         }
 
         return filteredItems;
+    }
+
+    private boolean tagsContainQuery(List<String> tags, String normalizedQuery) {
+        for (String tag : tags) {
+            if (tag.toLowerCase(Locale.getDefault()).contains(normalizedQuery)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private String formatTags(List<String> tags) {
+        List<String> labels = new ArrayList<>(tags.size());
+
+        for (String tag : tags) {
+            labels.add(getString(R.string.item_tag_label, tag));
+        }
+
+        return String.join("  ", labels);
     }
 
     private List<LastTimeItem> getSortedAppItems(List<LastTimeItem> items) {
@@ -363,6 +392,12 @@ public class MainActivity extends Activity {
         titleInput.setHint(R.string.item_dialog_hint);
         titleInput.setSingleLine();
 
+        List<String> editorTags = existingItem == null
+                ? new ArrayList<>()
+                : new ArrayList<>(existingItem.getTags());
+        LinearLayout tagsEditor = createTagsEditor(editorTags);
+        EditText pendingTagInput = (EditText) tagsEditor.getTag();
+
         EditText intervalInput = new EditText(this);
         intervalInput.setHint(R.string.item_interval_hint);
         intervalInput.setInputType(InputType.TYPE_CLASS_NUMBER);
@@ -371,6 +406,13 @@ public class MainActivity extends Activity {
         LinearLayout dialogContent = new LinearLayout(this);
         dialogContent.setOrientation(LinearLayout.VERTICAL);
         dialogContent.addView(titleInput);
+
+        LinearLayout.LayoutParams tagsLayoutParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        tagsLayoutParams.topMargin = dpToPx(8);
+        dialogContent.addView(tagsEditor, tagsLayoutParams);
 
         LinearLayout.LayoutParams intervalLayoutParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -419,11 +461,13 @@ public class MainActivity extends Activity {
                     return;
                 }
 
+                addTagsIfNew(editorTags, pendingTagInput.getText().toString());
+
                 if (dialogItem == null) {
-                    LastTimeStorage.addItem(this, title, intervalDays);
+                    LastTimeStorage.addItem(this, title, intervalDays, editorTags);
                     Log.d(LOG_TAG, "Tracked item added from app dialog");
                 } else {
-                    LastTimeStorage.updateItem(this, dialogItem.getId(), title, intervalDays);
+                    LastTimeStorage.updateItem(this, dialogItem.getId(), title, intervalDays, editorTags);
                     Log.d(LOG_TAG, "Tracked item updated from app dialog: " + dialogItem.getId());
                 }
 
@@ -441,6 +485,127 @@ public class MainActivity extends Activity {
         });
 
         dialog.show();
+    }
+
+    private LinearLayout createTagsEditor(List<String> tags) {
+        LinearLayout editor = new LinearLayout(this);
+        editor.setOrientation(LinearLayout.VERTICAL);
+
+        TextView label = new TextView(this);
+        label.setText(R.string.item_tags_label);
+        label.setTextColor(getColor(R.color.widget_text_secondary));
+        label.setTextSize(14f);
+        editor.addView(label);
+
+        HorizontalScrollView tagsScrollView = new HorizontalScrollView(this);
+        tagsScrollView.setHorizontalScrollBarEnabled(false);
+        LinearLayout tagsContainer = new LinearLayout(this);
+        tagsContainer.setOrientation(LinearLayout.HORIZONTAL);
+        tagsContainer.setGravity(Gravity.CENTER_VERTICAL);
+        tagsScrollView.addView(tagsContainer);
+        LinearLayout.LayoutParams tagsScrollLayoutParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        tagsScrollLayoutParams.topMargin = dpToPx(6);
+        editor.addView(tagsScrollView, tagsScrollLayoutParams);
+
+        LinearLayout addTagRow = new LinearLayout(this);
+        addTagRow.setOrientation(LinearLayout.HORIZONTAL);
+        addTagRow.setGravity(Gravity.CENTER_VERTICAL);
+        EditText tagInput = new EditText(this);
+        tagInput.setHint(R.string.item_tag_add_hint);
+        tagInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS);
+        tagInput.setSingleLine();
+        tagInput.setImeOptions(EditorInfo.IME_ACTION_DONE);
+        editor.setTag(tagInput);
+        addTagRow.addView(tagInput, new LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+        ));
+
+        Button addTagButton = new Button(this);
+        addTagButton.setText(R.string.item_tag_add_button);
+        addTagRow.addView(addTagButton);
+        LinearLayout.LayoutParams addTagRowLayoutParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        addTagRowLayoutParams.topMargin = dpToPx(2);
+        editor.addView(addTagRow, addTagRowLayoutParams);
+
+        Runnable addTag = () -> {
+            addTagsIfNew(tags, tagInput.getText().toString());
+            tagInput.setText("");
+            renderTagEditorTags(tagsContainer, tagsScrollView, tags);
+        };
+
+        addTagButton.setOnClickListener(view -> addTag.run());
+        tagInput.setOnEditorActionListener((view, actionId, event) -> {
+            if (actionId != EditorInfo.IME_ACTION_DONE) {
+                return false;
+            }
+
+            addTag.run();
+            return true;
+        });
+        renderTagEditorTags(tagsContainer, tagsScrollView, tags);
+        return editor;
+    }
+
+    private void addTagsIfNew(List<String> tags, String rawTags) {
+        for (String enteredTag : LastTimeItem.parseTags(rawTags)) {
+            boolean alreadyAdded = false;
+
+            for (String tag : tags) {
+                if (tag.equalsIgnoreCase(enteredTag)) {
+                    alreadyAdded = true;
+                    break;
+                }
+            }
+
+            if (!alreadyAdded) {
+                tags.add(enteredTag);
+            }
+        }
+    }
+
+    private void renderTagEditorTags(
+            LinearLayout tagsContainer,
+            HorizontalScrollView tagsScrollView,
+            List<String> tags
+    ) {
+        tagsContainer.removeAllViews();
+
+        for (String tag : new ArrayList<>(tags)) {
+            TextView tagChip = new TextView(this);
+            tagChip.setText(getString(R.string.item_tag_remove_label, tag));
+            tagChip.setTextColor(getColor(R.color.widget_text_secondary));
+            tagChip.setTextSize(14f);
+            tagChip.setGravity(Gravity.CENTER);
+            tagChip.setPadding(dpToPx(12), dpToPx(8), dpToPx(12), dpToPx(8));
+
+            GradientDrawable background = new GradientDrawable();
+            background.setColor(getColor(R.color.tag_background));
+            background.setCornerRadius(dpToPx(18));
+            tagChip.setBackground(background);
+            tagChip.setContentDescription(getString(R.string.item_tag_remove_description, tag));
+            tagChip.setOnClickListener(view -> {
+                tags.remove(tag);
+                renderTagEditorTags(tagsContainer, tagsScrollView, tags);
+            });
+
+            LinearLayout.LayoutParams chipLayoutParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            chipLayoutParams.setMarginEnd(dpToPx(8));
+            tagsContainer.addView(tagChip, chipLayoutParams);
+        }
+
+        tagsScrollView.setVisibility(tags.isEmpty() ? View.GONE : View.VISIBLE);
+        tagsScrollView.post(() -> tagsScrollView.fullScroll(View.FOCUS_RIGHT));
     }
 
     private int getIntervalDaysFromInput(EditText intervalInput) {

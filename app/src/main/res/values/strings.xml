@@ -5,7 +5,7 @@
     <string name="tracked_items_section_title">Tracked Items</string>
     <string name="empty_tracked_items_state">No tracked items yet. Tap Add Item to create your first one.</string>
     <string name="empty_tracked_items_search_state">No tracked items match your search.</string>
-    <string name="tracked_items_search_hint">Search tracked items</string>
+    <string name="tracked_items_search_hint">Search items or tags</string>
     <string name="add_item_button">Add Item</string>
     <string name="refresh_widget_button">Refresh All Widgets From The App</string>
     <string name="status_no_widget">Tracking %1$d item(s). No home-screen widgets found. Last checked at %2$s.</string>
@@ -19,6 +19,12 @@
     <string name="dialog_add_title">Add "Last time I..." item</string>
     <string name="dialog_edit_title">Edit "Last time I..." item</string>
     <string name="item_dialog_hint">e.g. Changed my toothbrush</string>
+    <string name="item_tags_label">Tags</string>
+    <string name="item_tag_add_hint">Add a tag</string>
+    <string name="item_tag_add_button">Add</string>
+    <string name="item_tag_label">#%1$s</string>
+    <string name="item_tag_remove_label">%1$s  ×</string>
+    <string name="item_tag_remove_description">Remove %1$s tag</string>
     <string name="item_interval_hint">Interval in days (optional)</string>
     <string name="item_title_required">Enter an item name.</string>
     <string name="item_interval_invalid">Enter a whole number of days, or leave it empty.</string>

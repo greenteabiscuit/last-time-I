@@ -6,14 +6,19 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.time.LocalDate;
+import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 import java.util.TreeSet;
 
 public class LastTimeItem {
     private static final String KEY_ID = "id";
     private static final String KEY_TITLE = "title";
+    private static final String KEY_TAG = "tag";
+    private static final String KEY_TAGS = "tags";
     private static final String KEY_LAST_REFRESHED_AT_MILLIS = "lastRefreshedAtMillis";
     private static final String KEY_REFRESH_HISTORY_DATES = "refreshHistoryDates";
     private static final String KEY_REFRESH_HISTORY_MILLIS = "refreshHistoryMillis";
@@ -22,6 +27,7 @@ public class LastTimeItem {
 
     private final String id;
     private String title;
+    private final List<String> tags;
     private long lastRefreshedAtMillis;
     private int intervalDays;
     private long deletedAtMillis;
@@ -30,6 +36,7 @@ public class LastTimeItem {
     public LastTimeItem(
             String id,
             String title,
+            List<String> tags,
             long lastRefreshedAtMillis,
             int intervalDays,
             long deletedAtMillis,
@@ -37,6 +44,7 @@ public class LastTimeItem {
     ) {
         this.id = id;
         this.title = title;
+        this.tags = normalizeTags(tags);
         this.lastRefreshedAtMillis = lastRefreshedAtMillis;
         this.intervalDays = Math.max(intervalDays, 0);
         this.deletedAtMillis = Math.max(deletedAtMillis, 0L);
@@ -48,12 +56,17 @@ public class LastTimeItem {
     }
 
     public static LastTimeItem create(String title, int intervalDays) {
+        return create(title, intervalDays, Collections.emptyList());
+    }
+
+    public static LastTimeItem create(String title, int intervalDays, List<String> tags) {
         LocalDate today = LocalDate.now();
         List<LocalDate> refreshHistoryDates = new ArrayList<>();
         refreshHistoryDates.add(today);
         return new LastTimeItem(
                 UUID.randomUUID().toString(),
                 title,
+                tags,
                 LastTimeFormatter.getStartOfDayMillis(today),
                 intervalDays,
                 0L,
@@ -65,9 +78,23 @@ public class LastTimeItem {
         return jsonObject.has(KEY_REFRESH_HISTORY_DATES);
     }
 
+    public static boolean hasTags(JSONObject jsonObject) {
+        return jsonObject.has(KEY_TAGS);
+    }
+
     public static LastTimeItem fromJson(JSONObject jsonObject) throws JSONException {
         String id = jsonObject.optString(KEY_ID, "");
         String title = jsonObject.optString(KEY_TITLE, "").trim();
+        List<String> tags = new ArrayList<>();
+        JSONArray tagsJson = jsonObject.optJSONArray(KEY_TAGS);
+
+        if (tagsJson != null) {
+            for (int index = 0; index < tagsJson.length(); index++) {
+                tags.add(tagsJson.optString(index, ""));
+            }
+        } else {
+            tags.add(jsonObject.optString(KEY_TAG, ""));
+        }
 
         if (title.isEmpty()) {
             throw new JSONException("Last-time item title was empty");
@@ -123,19 +150,25 @@ public class LastTimeItem {
         long latestRefreshAtMillis = refreshHistoryDates.isEmpty()
                 ? 0L
                 : LastTimeFormatter.getStartOfDayMillis(refreshHistoryDates.last());
-        return new LastTimeItem(id, title, latestRefreshAtMillis, intervalDays, deletedAtMillis, new ArrayList<>(refreshHistoryDates));
+        return new LastTimeItem(id, title, tags, latestRefreshAtMillis, intervalDays, deletedAtMillis, new ArrayList<>(refreshHistoryDates));
     }
 
     public JSONObject toJson() throws JSONException {
         JSONObject jsonObject = new JSONObject();
         JSONArray refreshHistoryJson = new JSONArray();
+        JSONArray tagsJson = new JSONArray();
 
         for (LocalDate refreshDate : refreshHistoryDates) {
             refreshHistoryJson.put(LastTimeFormatter.getDateKey(refreshDate));
         }
 
+        for (String tag : tags) {
+            tagsJson.put(tag);
+        }
+
         jsonObject.put(KEY_ID, id);
         jsonObject.put(KEY_TITLE, title);
+        jsonObject.put(KEY_TAGS, tagsJson);
         jsonObject.put(KEY_LAST_REFRESHED_AT_MILLIS, lastRefreshedAtMillis);
         jsonObject.put(KEY_INTERVAL_DAYS, intervalDays);
         jsonObject.put(KEY_DELETED_AT_MILLIS, deletedAtMillis);
@@ -153,6 +186,19 @@ public class LastTimeItem {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public List<String> getTags() {
+        return Collections.unmodifiableList(tags);
+    }
+
+    public boolean hasTags() {
+        return !tags.isEmpty();
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags.clear();
+        this.tags.addAll(normalizeTags(tags));
     }
 
     public long getLastRefreshedAtMillis() {
@@ -230,5 +276,41 @@ public class LastTimeItem {
         }
 
         lastRefreshedAtMillis = LastTimeFormatter.getStartOfDayMillis(refreshHistoryDates.get(refreshHistoryDates.size() - 1));
+    }
+
+    public static List<String> parseTags(String rawTags) {
+        if (rawTags == null || rawTags.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String[] tagParts = rawTags.split(",");
+        List<String> tags = new ArrayList<>(tagParts.length);
+        Collections.addAll(tags, tagParts);
+        return normalizeTags(tags);
+    }
+
+    private static List<String> normalizeTags(List<String> rawTags) {
+        List<String> normalizedTags = new ArrayList<>();
+        Set<String> normalizedTagKeys = new HashSet<>();
+
+        if (rawTags == null) {
+            return normalizedTags;
+        }
+
+        for (String rawTag : rawTags) {
+            String tag = rawTag == null ? "" : rawTag.trim();
+
+            if (tag.startsWith("#")) {
+                tag = tag.substring(1).trim();
+            }
+
+            String tagKey = tag.toLowerCase(Locale.ROOT);
+
+            if (!tag.isEmpty() && normalizedTagKeys.add(tagKey)) {
+                normalizedTags.add(tag);
+            }
+        }
+
+        return normalizedTags;
     }
 }
