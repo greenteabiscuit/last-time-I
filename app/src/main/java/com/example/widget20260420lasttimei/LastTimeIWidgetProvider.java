@@ -6,6 +6,9 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews;
@@ -197,16 +200,46 @@ public class LastTimeIWidgetProvider extends AppWidgetProvider {
             LastTimeItem item = items.get(itemIndex);
             boolean isOverdue = item.isOverdue();
             String dayCountLabel = LastTimeFormatter.getDayCountLabel(context, item.getLastRefreshedAtMillis());
+            String displayedDayCount = isOverdue
+                    ? context.getString(R.string.widget_overdue_day_count, dayCountLabel)
+                    : dayCountLabel;
 
             views.setViewVisibility(ROW_IDS[rowIndex], View.VISIBLE);
             views.setTextViewText(TITLE_IDS[rowIndex], item.getTitle());
-            views.setTextViewText(DAYS_IDS[rowIndex], isOverdue ? context.getString(R.string.widget_overdue_day_count, dayCountLabel) : dayCountLabel);
+            views.setTextViewText(DAYS_IDS[rowIndex], buildWidgetDetails(context, item, displayedDayCount));
             views.setTextColor(TITLE_IDS[rowIndex], context.getColor(isOverdue ? R.color.widget_overdue : R.color.widget_text_primary));
             views.setTextColor(DAYS_IDS[rowIndex], context.getColor(isOverdue ? R.color.widget_overdue : R.color.widget_text_secondary));
             views.setOnClickPendingIntent(TITLE_IDS[rowIndex], createOpenAppPendingIntent(context, buildRequestCode(appWidgetId, 300 + rowIndex), ACTION_OPEN_EDIT_ITEM, item.getId()));
             views.setOnClickPendingIntent(DAYS_IDS[rowIndex], createOpenAppPendingIntent(context, buildRequestCode(appWidgetId, 400 + rowIndex), ACTION_OPEN_EDIT_ITEM, item.getId()));
             views.setOnClickPendingIntent(REFRESH_BUTTON_IDS[rowIndex], createMarkNowPendingIntent(context, appWidgetId, rowIndex, item.getId()));
         }
+    }
+
+    private static CharSequence buildWidgetDetails(Context context, LastTimeItem item, String dayCountLabel) {
+        SpannableStringBuilder details = new SpannableStringBuilder(dayCountLabel);
+
+        if (!item.hasTags()) {
+            return details;
+        }
+
+        int tagsStart = details.length();
+        details.append("  ·  ");
+
+        for (int index = 0; index < item.getTags().size(); index++) {
+            if (index > 0) {
+                details.append("  ");
+            }
+
+            details.append('#').append(item.getTags().get(index));
+        }
+
+        details.setSpan(
+                new ForegroundColorSpan(context.getColor(R.color.widget_text_muted)),
+                tagsStart,
+                details.length(),
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        );
+        return details;
     }
 
     private static List<LastTimeItem> getItemsByLastUpdated(Context context, boolean oldestFirst) {
