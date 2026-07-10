@@ -17,6 +17,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewParent;
 import android.widget.Button;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
@@ -37,6 +38,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class MainActivity extends Activity {
     private static final String LOG_TAG = "LastTimeIWidget";
@@ -395,7 +398,7 @@ public class MainActivity extends Activity {
         List<String> editorTags = existingItem == null
                 ? new ArrayList<>()
                 : new ArrayList<>(existingItem.getTags());
-        LinearLayout tagsEditor = createTagsEditor(editorTags);
+        LinearLayout tagsEditor = createTagsEditor(editorTags, getStoredTagSuggestions());
         EditText pendingTagInput = (EditText) tagsEditor.getTag();
 
         EditText intervalInput = new EditText(this);
@@ -487,7 +490,17 @@ public class MainActivity extends Activity {
         dialog.show();
     }
 
-    private LinearLayout createTagsEditor(List<String> tags) {
+    private List<String> getStoredTagSuggestions() {
+        Set<String> storedTags = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+
+        for (LastTimeItem item : LastTimeStorage.getItems(this)) {
+            storedTags.addAll(item.getTags());
+        }
+
+        return new ArrayList<>(storedTags);
+    }
+
+    private LinearLayout createTagsEditor(List<String> tags, List<String> tagSuggestions) {
         LinearLayout editor = new LinearLayout(this);
         editor.setOrientation(LinearLayout.VERTICAL);
 
@@ -513,11 +526,18 @@ public class MainActivity extends Activity {
         LinearLayout addTagRow = new LinearLayout(this);
         addTagRow.setOrientation(LinearLayout.HORIZONTAL);
         addTagRow.setGravity(Gravity.CENTER_VERTICAL);
-        EditText tagInput = new EditText(this);
+        AutoCompleteTextView tagInput = new AutoCompleteTextView(this);
         tagInput.setHint(R.string.item_tag_add_hint);
         tagInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS);
         tagInput.setSingleLine();
         tagInput.setImeOptions(EditorInfo.IME_ACTION_DONE);
+        tagInput.setThreshold(0);
+        tagInput.setAdapter(new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_dropdown_item_1line,
+                tagSuggestions
+        ));
+        tagInput.setOnClickListener(view -> tagInput.showDropDown());
         editor.setTag(tagInput);
         addTagRow.addView(tagInput, new LinearLayout.LayoutParams(
                 0,
@@ -542,6 +562,7 @@ public class MainActivity extends Activity {
         };
 
         addTagButton.setOnClickListener(view -> addTag.run());
+        tagInput.setOnItemClickListener((parent, view, position, id) -> addTag.run());
         tagInput.setOnEditorActionListener((view, actionId, event) -> {
             if (actionId != EditorInfo.IME_ACTION_DONE) {
                 return false;
