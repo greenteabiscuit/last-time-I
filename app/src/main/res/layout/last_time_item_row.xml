@@ -33,26 +33,40 @@
         android:textStyle="bold"
         android:visibility="gone" />
 
-    <LinearLayout
+    <TextView
+        android:id="@+id/item_calendar_month_label"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:gravity="end"
-        android:orientation="horizontal">
+        android:textColor="@color/widget_text_primary"
+        android:textSize="14sp"
+        android:textStyle="bold" />
 
-        <Button
-            android:id="@+id/item_mark_today_button"
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text="@string/item_calendar_strip_hint"
+        android:textColor="@color/widget_text_muted"
+        android:textSize="12sp" />
+
+    <HorizontalScrollView
+        android:id="@+id/item_calendar_scroll_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:clipToPadding="false"
+        android:fillViewport="false"
+        android:overScrollMode="ifContentScrolls"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/item_calendar_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/item_mark_today_button" />
-
-        <Button
-            android:id="@+id/item_history_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="@string/history_item_button" />
-    </LinearLayout>
+            android:gravity="center_vertical"
+            android:orientation="horizontal" />
+    </HorizontalScrollView>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -62,9 +76,16 @@
         android:orientation="horizontal">
 
         <Button
+            android:id="@+id/item_history_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/history_item_button" />
+
+        <Button
             android:id="@+id/item_edit_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
             android:text="@string/edit_item_button" />
 
         <Button

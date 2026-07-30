@@ -14,7 +14,9 @@
     <string name="edit_item_button">Edit</string>
     <string name="delete_item_button">Delete</string>
     <string name="restore_item_button">Restore</string>
-    <string name="item_mark_today_button">Mark Today</string>
+    <string name="item_calendar_month_label">%1$d %2$s</string>
+    <string name="item_calendar_strip_hint">Swipe dates back to 2010 · tap a circle to mark or unmark</string>
+    <string name="item_calendar_strip_description">Calendar from %1$s through %2$s. Swipe horizontally to browse dates.</string>
     <string name="save_item_button">Save</string>
     <string name="dialog_add_title">Add "Last time I..." item</string>
     <string name="dialog_edit_title">Edit "Last time I..." item</string>

@@ -4,6 +4,9 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.RectF;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.text.Editable;
@@ -15,6 +18,7 @@ import android.view.LayoutInflater;
 import android.view.inputmethod.EditorInfo;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewParent;
 import android.widget.Button;
 import android.widget.AutoCompleteTextView;
@@ -36,19 +40,26 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
 public class MainActivity extends Activity {
     private static final String LOG_TAG = "LastTimeIWidget";
-    private static final LocalDate HISTORY_START_DATE = LocalDate.of(2020, 1, 1);
+    private static final LocalDate HISTORY_START_DATE = LocalDate.of(2010, 1, 1);
     private static final int RECENT_EVENT_COUNT = 6;
     private static final int HISTORY_MONTH_SWIPE_MIN_DISTANCE_DP = 28;
     private static final int HISTORY_MONTH_SWIPE_INTERCEPT_DISTANCE_DP = 8;
     private static final float HISTORY_MONTH_SWIPE_HORIZONTAL_RATIO = 0.65f;
     private static final int HISTORY_MONTH_SLIDE_DURATION_MS = 180;
+    private static final int ITEM_CALENDAR_CIRCLE_SIZE_DP = 42;
+    private static final int ITEM_CALENDAR_DAY_GAP_DP = 8;
+    private static final int ITEM_CALENDAR_WEEKDAY_HEIGHT_DP = 16;
+    private static final int ITEM_CALENDAR_WEEKDAY_GAP_DP = 3;
     private static final int SORT_LATEST_UPDATED = 0;
     private static final int SORT_OLDEST_UPDATED = 1;
     private static final int SORT_ALPHABETICAL = 2;
@@ -56,6 +67,7 @@ public class MainActivity extends Activity {
     private TextView statusText;
     private TextView emptyStateText;
     private LinearLayout itemsContainer;
+    private final Map<String, Integer> itemCalendarScrollPositions = new HashMap<>();
     private int selectedSortOrder = SORT_LATEST_UPDATED;
     private String trackedItemsSearchQuery = "";
 
@@ -196,21 +208,30 @@ public class MainActivity extends Activity {
             TextView titleView = row.findViewById(R.id.item_title);
             TextView summaryView = row.findViewById(R.id.item_summary);
             TextView tagView = row.findViewById(R.id.item_tag);
-            Button markTodayButton = row.findViewById(R.id.item_mark_today_button);
+            TextView calendarMonthLabel = row.findViewById(R.id.item_calendar_month_label);
+            HorizontalScrollView calendarScrollView = row.findViewById(R.id.item_calendar_scroll_view);
+            LinearLayout calendarContainer = row.findViewById(R.id.item_calendar_container);
             Button historyButton = row.findViewById(R.id.item_history_button);
             Button editButton = row.findViewById(R.id.item_edit_button);
             Button deleteButton = row.findViewById(R.id.item_delete_button);
 
-            boolean isOverdue = item.isOverdue();
             boolean isDeleted = item.isDeleted();
-            String summary = LastTimeFormatter.getAppSummary(this, item.getLastRefreshedAtMillis());
             titleView.setText(item.getTitle());
-            summaryView.setText(getItemSummary(item, summary, isOverdue, isDeleted));
-            titleView.setTextColor(getColor(getItemTitleColor(isOverdue, isDeleted)));
-            summaryView.setTextColor(getColor(getItemSummaryColor(isOverdue, isDeleted)));
+            updateItemStatusViews(titleView, summaryView, item);
             tagView.setText(formatTags(item.getTags()));
             tagView.setTextColor(getColor(R.color.widget_text_muted));
             tagView.setVisibility(item.hasTags() ? View.VISIBLE : View.GONE);
+            renderItemCalendarStrip(
+                    calendarMonthLabel,
+                    calendarScrollView,
+                    calendarContainer,
+                    item,
+                    () -> updateItemStatusViews(
+                            titleView,
+                            summaryView,
+                            LastTimeStorage.getItem(MainActivity.this, item.getId())
+                    )
+            );
 
             View.OnClickListener editClickListener = view -> showItemEditorDialog(item.getId());
             row.setEnabled(!isDeleted);
@@ -221,16 +242,8 @@ public class MainActivity extends Activity {
             tagView.setOnClickListener(isDeleted ? null : editClickListener);
             editButton.setEnabled(!isDeleted);
             editButton.setOnClickListener(isDeleted ? null : editClickListener);
-            markTodayButton.setEnabled(!isDeleted);
             historyButton.setEnabled(!isDeleted);
             deleteButton.setText(isDeleted ? R.string.restore_item_button : R.string.delete_item_button);
-
-            markTodayButton.setOnClickListener(view -> {
-                if (LastTimeStorage.markNow(this, item.getId())) {
-                    Log.d(LOG_TAG, "Marked item as today from app: " + item.getId());
-                    syncItemsAndWidget();
-                }
-            });
 
             historyButton.setOnClickListener(view -> showHistoryDialog(item.getId()));
             deleteButton.setOnClickListener(view -> {
@@ -243,6 +256,255 @@ public class MainActivity extends Activity {
             });
             itemsContainer.addView(row);
         }
+    }
+
+    private void renderItemCalendarStrip(
+            TextView monthLabel,
+            HorizontalScrollView scrollView,
+            LinearLayout container,
+            LastTimeItem item,
+            Runnable onDateToggled
+    ) {
+        container.removeAllViews();
+        LocalDate today = LocalDate.now(ZoneId.systemDefault());
+        ItemCalendarStripView stripView = new ItemCalendarStripView(item, today, scrollView, onDateToggled);
+        container.addView(stripView, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        ));
+        monthLabel.setText(formatItemCalendarMonth(today));
+
+        int savedScrollPosition = itemCalendarScrollPositions.getOrDefault(item.getId(), -1);
+        scrollView.setOnScrollChangeListener((view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+            itemCalendarScrollPositions.put(item.getId(), scrollX);
+            updateItemCalendarMonthLabel(monthLabel, stripView, scrollView, scrollX);
+            stripView.invalidate();
+        });
+        scrollView.post(() -> {
+            if (savedScrollPosition >= 0) {
+                scrollView.scrollTo(savedScrollPosition, 0);
+            } else {
+                scrollView.scrollTo(stripView.getWidth(), 0);
+            }
+
+            updateItemCalendarMonthLabel(monthLabel, stripView, scrollView, scrollView.getScrollX());
+        });
+    }
+
+    private void updateItemCalendarMonthLabel(
+            TextView monthLabel,
+            ItemCalendarStripView stripView,
+            HorizontalScrollView scrollView,
+            int scrollX
+    ) {
+        float viewportCenterX = scrollX + (scrollView.getWidth() / 2f);
+        monthLabel.setText(formatItemCalendarMonth(stripView.getDateAtContentX(viewportCenterX)));
+    }
+
+    private String formatItemCalendarMonth(LocalDate date) {
+        return getString(
+                R.string.item_calendar_month_label,
+                date.getYear(),
+                date.getMonth().getDisplayName(TextStyle.FULL, Locale.getDefault())
+        );
+    }
+
+    private final class ItemCalendarStripView extends View {
+        private final LocalDate today;
+        private final String itemId;
+        private final Set<LocalDate> recordedDates;
+        private final HorizontalScrollView scrollView;
+        private final Runnable onDateToggled;
+        private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final RectF circleBounds = new RectF();
+        private final int circleSize;
+        private final int cellWidth;
+        private final int weekdayHeight;
+        private final int weekdayGap;
+        private final int dayCount;
+        private final int touchSlop;
+        private float touchDownX;
+        private float touchDownY;
+        private LocalDate pendingClickDate;
+
+        private ItemCalendarStripView(
+                LastTimeItem item,
+                LocalDate today,
+                HorizontalScrollView scrollView,
+                Runnable onDateToggled
+        ) {
+            super(MainActivity.this);
+            this.today = today;
+            this.scrollView = scrollView;
+            this.onDateToggled = onDateToggled;
+            itemId = item.getId();
+            recordedDates = new HashSet<>(item.getRefreshHistoryDates());
+            circleSize = dpToPx(ITEM_CALENDAR_CIRCLE_SIZE_DP);
+            cellWidth = circleSize + dpToPx(ITEM_CALENDAR_DAY_GAP_DP);
+            weekdayHeight = dpToPx(ITEM_CALENDAR_WEEKDAY_HEIGHT_DP);
+            weekdayGap = dpToPx(ITEM_CALENDAR_WEEKDAY_GAP_DP);
+            dayCount = (int) ChronoUnit.DAYS.between(HISTORY_START_DATE, today) + 1;
+            touchSlop = ViewConfiguration.get(MainActivity.this).getScaledTouchSlop();
+            setClickable(!item.isDeleted());
+            setEnabled(!item.isDeleted());
+            setFocusable(!item.isDeleted());
+            setContentDescription(getString(
+                    R.string.item_calendar_strip_description,
+                    LastTimeFormatter.getDateLabel(HISTORY_START_DATE),
+                    LastTimeFormatter.getDateLabel(today)
+            ));
+        }
+
+        @Override
+        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+            int desiredWidth = (dayCount * cellWidth) - dpToPx(ITEM_CALENDAR_DAY_GAP_DP);
+            int desiredHeight = weekdayHeight + weekdayGap + circleSize;
+            setMeasuredDimension(
+                    resolveSize(desiredWidth, widthMeasureSpec),
+                    resolveSize(desiredHeight, heightMeasureSpec)
+            );
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+            int visibleLeft = scrollView.getScrollX();
+            int visibleRight = visibleLeft + scrollView.getWidth();
+            int firstVisibleDay = Math.max(0, (visibleLeft / cellWidth) - 1);
+            int lastVisibleDay = Math.min(dayCount - 1, (visibleRight / cellWidth) + 1);
+            float circleRadius = circleSize / 2f;
+            float circleCenterY = weekdayHeight + weekdayGap + circleRadius;
+            paint.setTextSize(getResources().getDisplayMetrics().scaledDensity * 11f);
+            float weekdayBaseline = getCenteredTextBaseline(weekdayHeight);
+            paint.setTextSize(getResources().getDisplayMetrics().scaledDensity * 13f);
+            float dayBaseline = circleCenterY + getTextCenterOffset();
+
+            for (int dayIndex = firstVisibleDay; dayIndex <= lastVisibleDay; dayIndex++) {
+                LocalDate date = HISTORY_START_DATE.plusDays(dayIndex);
+                boolean isRecorded = recordedDates.contains(date);
+                boolean isToday = date.equals(today);
+                float circleCenterX = (dayIndex * cellWidth) + circleRadius;
+
+                paint.setStyle(Paint.Style.FILL);
+                paint.setTextAlign(Paint.Align.CENTER);
+                paint.setTextSize(getResources().getDisplayMetrics().scaledDensity * 11f);
+                paint.setColor(getColor(isToday ? R.color.widget_accent : R.color.widget_text_muted));
+                canvas.drawText(
+                        date.getDayOfWeek().getDisplayName(TextStyle.NARROW, Locale.getDefault()),
+                        circleCenterX,
+                        weekdayBaseline,
+                        paint
+                );
+
+                circleBounds.set(
+                        circleCenterX - circleRadius,
+                        circleCenterY - circleRadius,
+                        circleCenterX + circleRadius,
+                        circleCenterY + circleRadius
+                );
+                paint.setColor(getColor(isRecorded ? R.color.widget_accent : android.R.color.white));
+                canvas.drawOval(circleBounds, paint);
+
+                paint.setStyle(Paint.Style.STROKE);
+                paint.setStrokeWidth(dpToPx(isToday ? 2 : 1));
+                paint.setColor(getColor(isRecorded || isToday ? R.color.widget_accent : R.color.widget_border));
+                canvas.drawOval(circleBounds, paint);
+
+                paint.setStyle(Paint.Style.FILL);
+                paint.setTextSize(getResources().getDisplayMetrics().scaledDensity * 13f);
+                paint.setColor(getColor(isRecorded ? android.R.color.white : R.color.widget_text_secondary));
+                canvas.drawText(String.valueOf(date.getDayOfMonth()), circleCenterX, dayBaseline, paint);
+            }
+        }
+
+        @Override
+        public boolean onTouchEvent(MotionEvent event) {
+            if (!isEnabled()) {
+                return false;
+            }
+
+            if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                touchDownX = event.getX();
+                touchDownY = event.getY();
+                return true;
+            }
+
+            if (event.getActionMasked() == MotionEvent.ACTION_UP) {
+                boolean isTap = Math.abs(event.getX() - touchDownX) <= touchSlop
+                        && Math.abs(event.getY() - touchDownY) <= touchSlop;
+                pendingClickDate = isTap ? getCircleDateAt(event.getX(), event.getY()) : null;
+                return pendingClickDate != null && performClick();
+            }
+
+            return event.getActionMasked() != MotionEvent.ACTION_CANCEL;
+        }
+
+        @Override
+        public boolean performClick() {
+            super.performClick();
+
+            if (pendingClickDate == null) {
+                return false;
+            }
+
+            LocalDate clickedDate = pendingClickDate;
+            pendingClickDate = null;
+
+            if (LastTimeStorage.toggleRefreshDay(MainActivity.this, itemId, clickedDate)) {
+                Log.d(LOG_TAG, "Toggled item history day from calendar strip: " + itemId + " on " + clickedDate);
+                if (!recordedDates.remove(clickedDate)) {
+                    recordedDates.add(clickedDate);
+                }
+                invalidate();
+                onDateToggled.run();
+                LastTimeIWidgetProvider.requestRefreshAll(MainActivity.this);
+                return true;
+            }
+
+            return false;
+        }
+
+        private LocalDate getCircleDateAt(float x, float y) {
+            int dayIndex = Math.min(dayCount - 1, Math.max(0, (int) (x / cellWidth)));
+            float circleRadius = circleSize / 2f;
+            float circleCenterX = (dayIndex * cellWidth) + circleRadius;
+            float circleCenterY = weekdayHeight + weekdayGap + circleRadius;
+            float xDistance = x - circleCenterX;
+            float yDistance = y - circleCenterY;
+
+            if ((xDistance * xDistance) + (yDistance * yDistance) > circleRadius * circleRadius) {
+                return null;
+            }
+
+            return HISTORY_START_DATE.plusDays(dayIndex);
+        }
+
+        private LocalDate getDateAtContentX(float x) {
+            int dayIndex = Math.min(dayCount - 1, Math.max(0, (int) (x / cellWidth)));
+            return HISTORY_START_DATE.plusDays(dayIndex);
+        }
+
+        private float getCenteredTextBaseline(float areaHeight) {
+            return (areaHeight / 2f) + getTextCenterOffset();
+        }
+
+        private float getTextCenterOffset() {
+            Paint.FontMetrics fontMetrics = paint.getFontMetrics();
+            return -((fontMetrics.ascent + fontMetrics.descent) / 2f);
+        }
+    }
+
+    private void updateItemStatusViews(TextView titleView, TextView summaryView, LastTimeItem item) {
+        if (item == null) {
+            return;
+        }
+
+        boolean isOverdue = item.isOverdue();
+        boolean isDeleted = item.isDeleted();
+        String summary = LastTimeFormatter.getAppSummary(this, item.getLastRefreshedAtMillis());
+        summaryView.setText(getItemSummary(item, summary, isOverdue, isDeleted));
+        titleView.setTextColor(getColor(getItemTitleColor(isOverdue, isDeleted)));
+        summaryView.setTextColor(getColor(getItemSummaryColor(isOverdue, isDeleted)));
     }
 
     private String getItemSummary(LastTimeItem item, String summary, boolean isOverdue, boolean isDeleted) {

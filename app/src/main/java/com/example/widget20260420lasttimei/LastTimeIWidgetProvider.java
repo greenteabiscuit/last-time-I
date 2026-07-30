@@ -23,6 +23,7 @@ import java.util.Set;
 
 public class LastTimeIWidgetProvider extends AppWidgetProvider {
     private static final String LOG_TAG = "LastTimeIWidget";
+    private static final String HIDDEN_WIDGET_TAG = "health";
     public static final String ACTION_REFRESH = "com.example.widget20260420lasttimei.action.REFRESH";
     public static final String ACTION_MARK_NOW = "com.example.widget20260420lasttimei.action.MARK_NOW";
     public static final String ACTION_OPEN_ADD_ITEM = "com.example.widget20260420lasttimei.action.OPEN_ADD_ITEM";
@@ -243,11 +244,28 @@ public class LastTimeIWidgetProvider extends AppWidgetProvider {
     }
 
     private static List<LastTimeItem> getItemsByLastUpdated(Context context, boolean oldestFirst) {
-        List<LastTimeItem> items = new ArrayList<>(LastTimeStorage.getActiveItems(context));
+        List<LastTimeItem> items = new ArrayList<>();
+
+        for (LastTimeItem item : LastTimeStorage.getActiveItems(context)) {
+            if (!hasTag(item, HIDDEN_WIDGET_TAG)) {
+                items.add(item);
+            }
+        }
+
         Collections.sort(items, (left, right) -> oldestFirst
                 ? Long.compare(left.getLastRefreshedAtMillis(), right.getLastRefreshedAtMillis())
                 : Long.compare(right.getLastRefreshedAtMillis(), left.getLastRefreshedAtMillis()));
         return items;
+    }
+
+    private static boolean hasTag(LastTimeItem item, String expectedTag) {
+        for (String tag : item.getTags()) {
+            if (tag.equalsIgnoreCase(expectedTag)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static List<LastTimeItem> getSectionItems(List<LastTimeItem> items, int sectionItemCount) {
