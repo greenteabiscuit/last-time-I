@@ -6,10 +6,12 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 import android.widget.RemoteViews;
 
@@ -26,12 +28,13 @@ public class LastTimeIWidgetProvider extends AppWidgetProvider {
     private static final String HIDDEN_WIDGET_TAG = "health";
     public static final String ACTION_REFRESH = "com.example.widget20260420lasttimei.action.REFRESH";
     public static final String ACTION_MARK_NOW = "com.example.widget20260420lasttimei.action.MARK_NOW";
+    public static final String ACTION_SNOOZE = "com.example.widget20260420lasttimei.action.SNOOZE";
     public static final String ACTION_OPEN_ADD_ITEM = "com.example.widget20260420lasttimei.action.OPEN_ADD_ITEM";
     public static final String ACTION_OPEN_EDIT_ITEM = "com.example.widget20260420lasttimei.action.OPEN_EDIT_ITEM";
     public static final String EXTRA_ITEM_ID = "com.example.widget20260420lasttimei.extra.ITEM_ID";
-    private static final int SECTION_ITEM_COUNT = 3;
+    private static final int SECTION_ITEM_COUNT = 4;
     private static final int LATEST_SECTION_START_INDEX = 0;
-    private static final int OLDEST_SECTION_START_INDEX = 3;
+    private static final int OLDEST_SECTION_START_INDEX = SECTION_ITEM_COUNT;
 
     private static final int[] ROW_IDS = new int[] {
             R.id.widget_row_1,
@@ -85,6 +88,17 @@ public class LastTimeIWidgetProvider extends AppWidgetProvider {
             R.id.widget_row_10_refresh
     };
 
+    private static final int[] SNOOZE_BUTTON_IDS = new int[] {
+            R.id.widget_row_1_snooze,
+            R.id.widget_row_2_snooze,
+            R.id.widget_row_3_snooze,
+            R.id.widget_row_4_snooze,
+            R.id.widget_row_5_snooze,
+            R.id.widget_row_6_snooze,
+            R.id.widget_row_7_snooze,
+            R.id.widget_row_8_snooze
+    };
+
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         Log.d(LOG_TAG, "onUpdate for " + appWidgetIds.length + " widget(s)");
@@ -97,6 +111,15 @@ public class LastTimeIWidgetProvider extends AppWidgetProvider {
 
         String action = intent.getAction();
         Log.d(LOG_TAG, "onReceive action=" + action);
+
+        if (ACTION_SNOOZE.equals(action)) {
+            String itemId = intent.getStringExtra(EXTRA_ITEM_ID);
+            if (itemId != null) {
+                LastTimeStorage.setWidgetSnoozed(context, itemId, true);
+                requestRefreshAll(context);
+            }
+            return;
+        }
 
         if (!ACTION_REFRESH.equals(action) && !ACTION_MARK_NOW.equals(action)) {
             return;
@@ -152,9 +175,9 @@ public class LastTimeIWidgetProvider extends AppWidgetProvider {
 
     private static void updateSingleWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_last_time_i);
-        List<LastTimeItem> items = getItemsByLastUpdated(context, false);
+        List<LastTimeItem> items = getItemsByLastUpdated(context);
         List<LastTimeItem> latestItems = getSectionItems(items, SECTION_ITEM_COUNT);
-        List<LastTimeItem> oldestItems = getOldestItemsExcluding(context, latestItems, SECTION_ITEM_COUNT);
+        List<LastTimeItem> oldestItems = getOldestItemsExcluding(items, latestItems, SECTION_ITEM_COUNT);
         String updatedAt = DateFormat.getTimeInstance(DateFormat.SHORT).format(new Date());
 
         Log.d(LOG_TAG, "Updating widget id=" + appWidgetId + " with " + items.size() + " tracked item(s) at " + updatedAt);
@@ -208,11 +231,16 @@ public class LastTimeIWidgetProvider extends AppWidgetProvider {
             views.setViewVisibility(ROW_IDS[rowIndex], View.VISIBLE);
             views.setTextViewText(TITLE_IDS[rowIndex], item.getTitle());
             views.setTextViewText(DAYS_IDS[rowIndex], buildWidgetDetails(context, item, displayedDayCount));
+            views.setTextViewTextSize(TITLE_IDS[rowIndex], TypedValue.COMPLEX_UNIT_SP, 12);
+            views.setTextViewTextSize(DAYS_IDS[rowIndex], TypedValue.COMPLEX_UNIT_SP, 10);
+            views.setInt(DAYS_IDS[rowIndex], "setMaxLines", 1);
             views.setTextColor(TITLE_IDS[rowIndex], context.getColor(isOverdue ? R.color.widget_overdue : R.color.widget_text_primary));
             views.setTextColor(DAYS_IDS[rowIndex], context.getColor(isOverdue ? R.color.widget_overdue : R.color.widget_text_secondary));
             views.setOnClickPendingIntent(TITLE_IDS[rowIndex], createOpenAppPendingIntent(context, buildRequestCode(appWidgetId, 300 + rowIndex), ACTION_OPEN_EDIT_ITEM, item.getId()));
             views.setOnClickPendingIntent(DAYS_IDS[rowIndex], createOpenAppPendingIntent(context, buildRequestCode(appWidgetId, 400 + rowIndex), ACTION_OPEN_EDIT_ITEM, item.getId()));
             views.setOnClickPendingIntent(REFRESH_BUTTON_IDS[rowIndex], createMarkNowPendingIntent(context, appWidgetId, rowIndex, item.getId()));
+            views.setContentDescription(SNOOZE_BUTTON_IDS[rowIndex], context.getString(R.string.widget_row_snooze_description, item.getTitle()));
+            views.setOnClickPendingIntent(SNOOZE_BUTTON_IDS[rowIndex], createSnoozePendingIntent(context, appWidgetId, rowIndex, item.getId()));
         }
     }
 
@@ -243,18 +271,16 @@ public class LastTimeIWidgetProvider extends AppWidgetProvider {
         return details;
     }
 
-    private static List<LastTimeItem> getItemsByLastUpdated(Context context, boolean oldestFirst) {
+    private static List<LastTimeItem> getItemsByLastUpdated(Context context) {
         List<LastTimeItem> items = new ArrayList<>();
 
         for (LastTimeItem item : LastTimeStorage.getActiveItems(context)) {
-            if (!hasTag(item, HIDDEN_WIDGET_TAG)) {
+            if (!item.isWidgetSnoozed() && !hasTag(item, HIDDEN_WIDGET_TAG)) {
                 items.add(item);
             }
         }
 
-        Collections.sort(items, (left, right) -> oldestFirst
-                ? Long.compare(left.getLastRefreshedAtMillis(), right.getLastRefreshedAtMillis())
-                : Long.compare(right.getLastRefreshedAtMillis(), left.getLastRefreshedAtMillis()));
+        Collections.sort(items, (left, right) -> Long.compare(right.getLastRefreshedAtMillis(), left.getLastRefreshedAtMillis()));
         return items;
     }
 
@@ -272,7 +298,7 @@ public class LastTimeIWidgetProvider extends AppWidgetProvider {
         return new ArrayList<>(items.subList(0, Math.min(items.size(), sectionItemCount)));
     }
 
-    private static List<LastTimeItem> getOldestItemsExcluding(Context context, List<LastTimeItem> latestItems, int sectionItemCount) {
+    private static List<LastTimeItem> getOldestItemsExcluding(List<LastTimeItem> items, List<LastTimeItem> latestItems, int sectionItemCount) {
         Set<String> latestItemIds = new HashSet<>();
 
         for (LastTimeItem item : latestItems) {
@@ -280,8 +306,11 @@ public class LastTimeIWidgetProvider extends AppWidgetProvider {
         }
 
         List<LastTimeItem> oldestItems = new ArrayList<>();
+        // Use the same eligible items for both sections and counts, even if a snooze expires mid-update.
+        List<LastTimeItem> sortedItems = new ArrayList<>(items);
+        Collections.sort(sortedItems, (left, right) -> Long.compare(left.getLastRefreshedAtMillis(), right.getLastRefreshedAtMillis()));
 
-        for (LastTimeItem item : getItemsByLastUpdated(context, true)) {
+        for (LastTimeItem item : sortedItems) {
             if (latestItemIds.contains(item.getId())) {
                 continue;
             }
@@ -314,6 +343,21 @@ public class LastTimeIWidgetProvider extends AppWidgetProvider {
                 context,
                 buildRequestCode(appWidgetId, 100 + rowIndex),
                 markNowIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+    }
+
+    private static PendingIntent createSnoozePendingIntent(Context context, int appWidgetId, int rowIndex, String itemId) {
+        Intent snoozeIntent = new Intent(context, LastTimeIWidgetProvider.class);
+        snoozeIntent.setAction(ACTION_SNOOZE);
+        // Keep a previously rendered button tied to its item when another widget reorders the rows.
+        snoozeIntent.setData(Uri.fromParts("last-time-i-snooze", itemId, null));
+        snoozeIntent.putExtra(EXTRA_ITEM_ID, itemId);
+
+        return PendingIntent.getBroadcast(
+                context,
+                buildRequestCode(appWidgetId, 200 + rowIndex),
+                snoozeIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
     }

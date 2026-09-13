@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
     android:orientation="vertical"
-    android:padding="14dp">
+    android:padding="10dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -19,7 +19,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:textColor="#1F1A17"
-            android:textSize="18sp"
+            android:textSize="16sp"
             android:textStyle="bold" />
 
         <TextView
@@ -27,7 +27,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="#5A4E45"
-            android:textSize="13sp"
+            android:textSize="11sp"
             android:textStyle="bold" />
     </LinearLayout>
 
@@ -45,17 +45,17 @@
         android:id="@+id/widget_latest_section_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="4dp"
         android:text="@string/widget_latest_section_title"
         android:textColor="#2F7A4C"
-        android:textSize="12sp"
+        android:textSize="11sp"
         android:textStyle="bold" />
 
     <LinearLayout
         android:id="@+id/widget_row_1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
+        android:layout_marginTop="0dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
@@ -86,18 +86,20 @@
 
         <Button
             android:id="@+id/widget_row_1_refresh"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="@string/widget_row_refresh_button"
-            android:textAllCaps="false" />
+            style="@style/WidgetRowAction"
+            android:text="@string/widget_row_refresh_button" />
+
+        <Button
+            android:id="@+id/widget_row_1_snooze"
+            style="@style/WidgetRowAction"
+            android:text="@string/widget_row_snooze_button" />
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/widget_row_2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="0dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
@@ -128,18 +130,20 @@
 
         <Button
             android:id="@+id/widget_row_2_refresh"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="@string/widget_row_refresh_button"
-            android:textAllCaps="false" />
+            style="@style/WidgetRowAction"
+            android:text="@string/widget_row_refresh_button" />
+
+        <Button
+            android:id="@+id/widget_row_2_snooze"
+            style="@style/WidgetRowAction"
+            android:text="@string/widget_row_snooze_button" />
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/widget_row_3"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="0dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
@@ -170,28 +174,20 @@
 
         <Button
             android:id="@+id/widget_row_3_refresh"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="@string/widget_row_refresh_button"
-            android:textAllCaps="false" />
-    </LinearLayout>
+            style="@style/WidgetRowAction"
+            android:text="@string/widget_row_refresh_button" />
 
-    <TextView
-        android:id="@+id/widget_oldest_section_header"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="@string/widget_oldest_section_title"
-        android:textColor="#2F7A4C"
-        android:textSize="12sp"
-        android:textStyle="bold" />
+        <Button
+            android:id="@+id/widget_row_3_snooze"
+            style="@style/WidgetRowAction"
+            android:text="@string/widget_row_snooze_button" />
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/widget_row_4"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
+        android:layout_marginTop="0dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
@@ -222,18 +218,30 @@
 
         <Button
             android:id="@+id/widget_row_4_refresh"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="@string/widget_row_refresh_button"
-            android:textAllCaps="false" />
+            style="@style/WidgetRowAction"
+            android:text="@string/widget_row_refresh_button" />
+
+        <Button
+            android:id="@+id/widget_row_4_snooze"
+            style="@style/WidgetRowAction"
+            android:text="@string/widget_row_snooze_button" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/widget_oldest_section_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="@string/widget_oldest_section_title"
+        android:textColor="#2F7A4C"
+        android:textSize="11sp"
+        android:textStyle="bold" />
 
     <LinearLayout
         android:id="@+id/widget_row_5"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="0dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
@@ -264,18 +272,20 @@
 
         <Button
             android:id="@+id/widget_row_5_refresh"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="@string/widget_row_refresh_button"
-            android:textAllCaps="false" />
+            style="@style/WidgetRowAction"
+            android:text="@string/widget_row_refresh_button" />
+
+        <Button
+            android:id="@+id/widget_row_5_snooze"
+            style="@style/WidgetRowAction"
+            android:text="@string/widget_row_snooze_button" />
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/widget_row_6"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="0dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
@@ -306,18 +316,20 @@
 
         <Button
             android:id="@+id/widget_row_6_refresh"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="@string/widget_row_refresh_button"
-            android:textAllCaps="false" />
+            style="@style/WidgetRowAction"
+            android:text="@string/widget_row_refresh_button" />
+
+        <Button
+            android:id="@+id/widget_row_6_snooze"
+            style="@style/WidgetRowAction"
+            android:text="@string/widget_row_snooze_button" />
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/widget_row_7"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="0dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
@@ -348,18 +360,20 @@
 
         <Button
             android:id="@+id/widget_row_7_refresh"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="@string/widget_row_refresh_button"
-            android:textAllCaps="false" />
+            style="@style/WidgetRowAction"
+            android:text="@string/widget_row_refresh_button" />
+
+        <Button
+            android:id="@+id/widget_row_7_snooze"
+            style="@style/WidgetRowAction"
+            android:text="@string/widget_row_snooze_button" />
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/widget_row_8"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="0dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
@@ -390,11 +404,13 @@
 
         <Button
             android:id="@+id/widget_row_8_refresh"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="@string/widget_row_refresh_button"
-            android:textAllCaps="false" />
+            style="@style/WidgetRowAction"
+            android:text="@string/widget_row_refresh_button" />
+
+        <Button
+            android:id="@+id/widget_row_8_snooze"
+            style="@style/WidgetRowAction"
+            android:text="@string/widget_row_snooze_button" />
     </LinearLayout>
 
     <LinearLayout
@@ -485,9 +501,9 @@
         android:id="@+id/widget_more_indicator"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="4dp"
         android:textColor="#2F7A4C"
-        android:textSize="13sp"
+        android:textSize="11sp"
         android:textStyle="bold"
         android:visibility="gone" />
 
@@ -495,14 +511,14 @@
         android:id="@+id/widget_timestamp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="4dp"
         android:textColor="#8C8178"
-        android:textSize="12sp" />
+        android:textSize="10sp" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="4dp"
         android:orientation="horizontal">
 
         <Button
@@ -510,6 +526,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:textSize="11sp"
             android:text="@string/widget_add_button" />
 
         <Button
@@ -518,6 +535,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_weight="1"
+            android:textSize="11sp"
             android:text="@string/widget_open_app_button" />
     </LinearLayout>
 </LinearLayout>

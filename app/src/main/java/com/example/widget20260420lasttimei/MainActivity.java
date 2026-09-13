@@ -214,6 +214,8 @@ public class MainActivity extends Activity {
             Button historyButton = row.findViewById(R.id.item_history_button);
             Button editButton = row.findViewById(R.id.item_edit_button);
             Button deleteButton = row.findViewById(R.id.item_delete_button);
+            Button snoozeButton = row.findViewById(R.id.item_snooze_button);
+            TextView snoozedHint = row.findViewById(R.id.item_snoozed_hint);
 
             boolean isDeleted = item.isDeleted();
             titleView.setText(item.getTitle());
@@ -244,6 +246,19 @@ public class MainActivity extends Activity {
             editButton.setOnClickListener(isDeleted ? null : editClickListener);
             historyButton.setEnabled(!isDeleted);
             deleteButton.setText(isDeleted ? R.string.restore_item_button : R.string.delete_item_button);
+
+            boolean isSnoozed = item.isWidgetSnoozed();
+            snoozeButton.setVisibility(isDeleted ? View.GONE : View.VISIBLE);
+            snoozeButton.setText(isSnoozed
+                    ? R.string.unsnooze_widget_button : R.string.snooze_widget_button);
+            snoozedHint.setText(getString(R.string.widget_snoozed_hint,
+                    DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT)
+                            .format(new Date(item.getWidgetSnoozedUntilMillis()))));
+            snoozedHint.setVisibility(!isDeleted && isSnoozed ? View.VISIBLE : View.GONE);
+            snoozeButton.setOnClickListener(view -> {
+                LastTimeStorage.setWidgetSnoozed(this, item.getId(), !isSnoozed);
+                syncItemsAndWidget();
+            });
 
             historyButton.setOnClickListener(view -> showHistoryDialog(item.getId()));
             deleteButton.setOnClickListener(view -> {

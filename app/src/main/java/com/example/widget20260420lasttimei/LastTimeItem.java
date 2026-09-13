@@ -24,6 +24,7 @@ public class LastTimeItem {
     private static final String KEY_REFRESH_HISTORY_MILLIS = "refreshHistoryMillis";
     private static final String KEY_INTERVAL_DAYS = "intervalDays";
     private static final String KEY_DELETED_AT_MILLIS = "deletedAtMillis";
+    private static final String KEY_WIDGET_SNOOZED_UNTIL_MILLIS = "widgetSnoozedUntilMillis";
 
     private final String id;
     private String title;
@@ -31,6 +32,7 @@ public class LastTimeItem {
     private long lastRefreshedAtMillis;
     private int intervalDays;
     private long deletedAtMillis;
+    private long widgetSnoozedUntilMillis;
     private final List<LocalDate> refreshHistoryDates;
 
     public LastTimeItem(
@@ -150,7 +152,9 @@ public class LastTimeItem {
         long latestRefreshAtMillis = refreshHistoryDates.isEmpty()
                 ? 0L
                 : LastTimeFormatter.getStartOfDayMillis(refreshHistoryDates.last());
-        return new LastTimeItem(id, title, tags, latestRefreshAtMillis, intervalDays, deletedAtMillis, new ArrayList<>(refreshHistoryDates));
+        LastTimeItem item = new LastTimeItem(id, title, tags, latestRefreshAtMillis, intervalDays, deletedAtMillis, new ArrayList<>(refreshHistoryDates));
+        item.setWidgetSnoozedUntilMillis(jsonObject.optLong(KEY_WIDGET_SNOOZED_UNTIL_MILLIS, 0L));
+        return item;
     }
 
     public JSONObject toJson() throws JSONException {
@@ -172,6 +176,7 @@ public class LastTimeItem {
         jsonObject.put(KEY_LAST_REFRESHED_AT_MILLIS, lastRefreshedAtMillis);
         jsonObject.put(KEY_INTERVAL_DAYS, intervalDays);
         jsonObject.put(KEY_DELETED_AT_MILLIS, deletedAtMillis);
+        jsonObject.put(KEY_WIDGET_SNOOZED_UNTIL_MILLIS, widgetSnoozedUntilMillis);
         jsonObject.put(KEY_REFRESH_HISTORY_DATES, refreshHistoryJson);
         return jsonObject;
     }
@@ -215,6 +220,18 @@ public class LastTimeItem {
 
     public boolean isDeleted() {
         return deletedAtMillis > 0L;
+    }
+
+    public boolean isWidgetSnoozed() {
+        return widgetSnoozedUntilMillis > System.currentTimeMillis();
+    }
+
+    public long getWidgetSnoozedUntilMillis() {
+        return widgetSnoozedUntilMillis;
+    }
+
+    public void setWidgetSnoozedUntilMillis(long widgetSnoozedUntilMillis) {
+        this.widgetSnoozedUntilMillis = Math.max(widgetSnoozedUntilMillis, 0L);
     }
 
     public void markDeleted(long deletedAtMillis) {

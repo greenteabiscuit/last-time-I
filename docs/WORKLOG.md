@@ -56,3 +56,19 @@ Use it for short, factual entries so we can reconstruct why the project changed 
 - Verified on: Local `./scripts/build-debug.sh` succeeded; Pixel 7 Pro over USB via `./scripts/install-debug.sh` succeeded; `adb shell am start -W -n com.example.widget20260420lasttimei/.MainActivity` returned `Status: ok`. UI inspection was blocked by the device keyguard.
 - Decisions: Store the new interval as `intervalDays` in each item JSON record; missing or `0` means no interval and never overdue. An item is overdue only when `daysSince > intervalDays`.
 - Next: Unlock the device and manually confirm overdue and no-interval rows render correctly in the app and on an active widget.
+
+## 2026-09-13 14:56 JST
+- What changed: Added per-item 7-day widget snooze, an early unsnooze control, and a visible expiry date. Persist `widgetSnoozedUntilMillis` without changing history; filter before selecting both widget sections and counts. Enabled 30-minute Android widget updates for automatic expiry.
+- Verified on: Five Robolectric tests covering old records, persistence, exact expiry boundaries, both widget sections, multiple widget instances, undo, deleted items, and an unsnooze click after expiry. Debug APK built. Inspected native Android renders of available, snoozed, and all-snoozed states. No phone data changed or APK installed.
+- Decisions: Snooze lasts exactly 7 × 24 hours; Android can delay the next refresh. Normal widget ordering and tag exclusions remain. Lint still reports the same 103 errors and 25 warnings as the untouched checkout; no new diagnostics.
+- Next: Install the built APK on the Pixel when requested and verify the real launcher widget.
+
+## 2026-09-13 — Pixel installation
+- What changed: Installed the snooze build on the Pixel 7 Pro. A signing-key mismatch required a user-approved uninstall/reinstall; backed up the original APK and refreshed the data backup immediately before replacement.
+- Verified on: Restored preferences matched the backup byte-for-byte. After launching successfully, all 22 item records still matched exactly. The device UI exposed an enabled `SNOOZE WIDGET FOR 7 DAYS` button.
+- Next: Re-add the home-screen widget removed by uninstalling the previous app.
+
+## 2026-09-13 — Direct widget snooze and eight rows
+- What changed: Added a `Snooze 7d` action beside `Today` on each widget row, expanded both Latest and Oldest to four distinct items, and reduced fonts and spacing while retaining 48dp-tall action targets. Snooze refreshes every widget; item-specific pending intents prevent stale clicks from snoozing a replacement row.
+- Verified on: Six Robolectric tests pass, including all eight snooze actions, both widget instances, history preservation, expiry, stale clicks, and Today. Inspected native renders at 363dp and 280dp widths and after snoozing. Debug build and normal Pixel update succeeded; all 22 records were unchanged and launcher logs confirmed existing widget 23 reloaded. Live launcher layout was not visually verified.
+- Limitations: Lint retains 103 pre-existing API errors and reports a small-font advisory for the intentionally compact 10sp timestamp.

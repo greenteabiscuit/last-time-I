@@ -95,4 +95,19 @@
             android:layout_marginStart="8dp"
             android:text="@string/delete_item_button" />
     </LinearLayout>
+
+    <Button
+        android:id="@+id/item_snooze_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/snooze_widget_button" />
+
+    <TextView
+        android:id="@+id/item_snoozed_hint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/widget_snoozed_hint"
+        android:textColor="@color/widget_text_secondary"
+        android:textSize="13sp"
+        android:visibility="gone" />
 </LinearLayout>

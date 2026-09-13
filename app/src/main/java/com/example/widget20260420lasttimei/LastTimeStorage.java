@@ -16,6 +16,7 @@ public final class LastTimeStorage {
     private static final String LOG_TAG = "LastTimeIWidget";
     private static final String PREFS_NAME = "last_time_i_storage";
     private static final String KEY_ITEMS_JSON = "items_json";
+    private static final long WIDGET_SNOOZE_MILLIS = 7L * 24 * 60 * 60 * 1000;
 
     private LastTimeStorage() {
     }
@@ -188,6 +189,24 @@ public final class LastTimeStorage {
 
                 item.restore();
                 saveItems(context, items, "restore item " + itemId);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static boolean setWidgetSnoozed(Context context, String itemId, boolean snoozed) {
+        List<LastTimeItem> items = getItems(context);
+
+        for (LastTimeItem item : items) {
+            if (item.getId().equals(itemId)) {
+                if (item.isDeleted()) {
+                    return false;
+                }
+
+                item.setWidgetSnoozedUntilMillis(snoozed ? System.currentTimeMillis() + WIDGET_SNOOZE_MILLIS : 0L);
+                saveItems(context, items, "set widget snooze " + snoozed + " for item " + itemId);
                 return true;
             }
         }

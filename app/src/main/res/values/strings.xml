@@ -14,6 +14,9 @@
     <string name="edit_item_button">Edit</string>
     <string name="delete_item_button">Delete</string>
     <string name="restore_item_button">Restore</string>
+    <string name="snooze_widget_button">Snooze widget for 7 days</string>
+    <string name="unsnooze_widget_button">Unsnooze now</string>
+    <string name="widget_snoozed_hint">Snoozed for 7 days, until %1$s. Returns on the next widget refresh. History is unchanged.</string>
     <string name="item_calendar_month_label">%1$d %2$s</string>
     <string name="item_calendar_strip_hint">Swipe dates back to 2010 · tap a circle to mark or unmark</string>
     <string name="item_calendar_strip_description">Calendar from %1$s through %2$s. Swipe horizontally to browse dates.</string>
@@ -56,6 +59,8 @@
     <string name="widget_add_button">Add</string>
     <string name="widget_open_app_button">Open App</string>
     <string name="widget_row_refresh_button">Today</string>
+    <string name="widget_row_snooze_button">Snooze\n7d</string>
+    <string name="widget_row_snooze_description">Snooze %1$s on the widget for 7 days</string>
     <string name="widget_last_updated">Updated %1$s</string>
     <string name="widget_description">A home-screen widget for remembering the last time you did something.</string>
     <string name="widget_latest_section_title">Latest</string>
@@ -63,7 +68,7 @@
     <string name="widget_summary_empty">No items</string>
     <string name="widget_summary_tracking">%1$d tracked</string>
     <string name="widget_more_items">+%1$d more in app</string>
-    <string name="widget_empty_state">No tracked items yet. Tap Add to start.</string>
+    <string name="widget_empty_state">No items to show. Open the app to add or unsnooze items, or check their tags.</string>
     <string name="widget_overdue_day_count">⚠ %1$s</string>
 
     <string name="day_count_today">Today</string>
