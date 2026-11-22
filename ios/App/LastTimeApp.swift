@@ -72,6 +72,13 @@ struct ContentView: View {
                         if overdue > 0 { Text("· \(overdue) overdue").font(.caption).foregroundStyle(.orange) }
                         Spacer()
                         Menu { Picker("Sort", selection: $sort) { Text("Latest updated").tag(0); Text("Oldest updated").tag(1); Text("A to Z").tag(2) } } label: { Image(systemName: "arrow.up.arrow.down").font(.subheadline).frame(width: 44, height: 30) }.accessibilityLabel("Sort")
+                        if !trash {
+                            Menu {
+                                Button("Deleted items", systemImage: "trash") { trash = true }
+                            } label: {
+                                Image(systemName: "ellipsis.circle").font(.subheadline).frame(width: 44, height: 30)
+                            }.accessibilityLabel("More options")
+                        }
                     }
                     if visible.isEmpty {
                         ContentUnavailableView(search.isEmpty ? "Nothing here yet" : "No matches", systemImage: "clock.badge.questionmark", description: Text(search.isEmpty ? "Add something you’d like to remember." : "Try another name or tag."))
@@ -88,7 +95,11 @@ struct ContentView: View {
             .onChange(of: trash) { _, _ in cancelReorder() }
             .onDisappear { cancelReorder() }
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) { Button { trash.toggle() } label: { Image(systemName: trash ? "clock" : "trash") }.accessibilityLabel(trash ? "Tracked items" : "Recently deleted") }
+                if trash {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button { trash = false } label: { Label("Back", systemImage: "chevron.left") }.accessibilityLabel("Tracked items")
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) { Button { adding = true } label: { Label("Add item", systemImage: "plus") } }
             }
             .sheet(isPresented: $adding) { ItemEditor(item: TrackedItem(title: ""), isNew: true).environmentObject(store) }

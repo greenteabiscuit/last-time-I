@@ -28,7 +28,10 @@ final class FlowTests: XCTestCase {
         app.buttons["Unsnooze now"].tap()
         app.buttons["Options for \(name)"].tap()
         app.buttons["Delete"].tap()
-        app.buttons["Recently deleted"].tap()
+        let more = app.buttons["More options"]
+        for _ in 0..<6 { if more.isHittable { break }; app.swipeDown() }
+        more.tap()
+        app.buttons["Deleted items"].tap()
         XCTAssertTrue(app.staticTexts[name].waitForExistence(timeout: 3))
         app.buttons["Options for \(name)"].tap()
         app.buttons["Restore"].tap()

@@ -93,3 +93,8 @@ Use it for short, factual entries so we can reconstruct why the project changed 
 
 - Today and inline calendar taps persist immediately and update the date indicator in place. Keep the current row order for 0.5 seconds after the last tap, then animate into the selected sort order over 0.45 seconds.
 - Rapid taps restart the delay; search, sort, trash navigation, and leaving the screen cancel pending movement. Respect Reduce Motion by applying the delayed reorder without animation.
+
+## 2026-11-22 — Move deleted items into More options
+
+- Removed the trash shortcut from the main navigation bar. Deleted items now opens from the ellipsis menu beside Sort, with a Back button on the deleted-items screen.
+- Updated the UI flow to open the new menu before restoring a deleted item.
