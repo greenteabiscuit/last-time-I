@@ -8,6 +8,7 @@ Native SwiftUI app and interactive WidgetKit extension, iOS 17 or later. Open `L
 - A horizontally swipeable calendar beneath every item. Starts at today, scrolls back to January 2010, and toggles a recorded day with one tap.
 - Add and edit moments, comma-separated tags, and optional expected intervals.
 - Record today once per calendar day; browse and toggle history back to January 2010.
+- Today and calendar updates save immediately, pause for 0.5 seconds, then smoothly reorder the row. Reduce Motion disables the sliding animation.
 - Search titles/tags and sort by latest, oldest, or name.
 - Overdue means calendar days since the latest record **greater than** the expected interval.
 - Soft-delete and restore with history preserved.

@@ -88,3 +88,8 @@ Use it for short, factual entries so we can reconstruct why the project changed 
 
 - Added a Debug-only in-app export/import bridge for devices restricting direct App Group filesystem access. Import validates IDs/titles/history/intervals, backs up current records before writing, saves atomically through shared storage, refreshes widgets, and exports a readback.
 - Verified export and import on the connected iPhone, including exact field-by-field readback equality. Personal data and backups are kept outside the repository.
+
+## 2026-11-22 — Delayed row movement
+
+- Today and inline calendar taps persist immediately and update the date indicator in place. Keep the current row order for 0.5 seconds after the last tap, then animate into the selected sort order over 0.45 seconds.
+- Rapid taps restart the delay; search, sort, trash navigation, and leaving the screen cancel pending movement. Respect Reduce Motion by applying the delayed reorder without animation.

@@ -26,17 +26,41 @@ extension Color {
 
 struct ContentView: View {
     @EnvironmentObject var store: TrackerStore
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var heldOrder: [String]?
+    @State private var reorderTask: Task<Void, Never>?
     @State private var search = ""
     @State private var sort = 0
     @State private var trash = false
     @State private var editor: TrackedItem?
     @State private var adding = false
     var visible: [TrackedItem] {
-        store.items.filter { ($0.deletedAt != nil) == trash && (search.isEmpty || ($0.title + " " + $0.tags.joined(separator: " ")).localizedCaseInsensitiveContains(search)) }.sorted {
+        let sorted = store.items.filter { ($0.deletedAt != nil) == trash && (search.isEmpty || ($0.title + " " + $0.tags.joined(separator: " ")).localizedCaseInsensitiveContains(search)) }.sorted {
             if sort == 2 { return $0.title.localizedStandardCompare($1.title) == .orderedAscending }
             let a = $0.lastDate ?? .distantPast, b = $1.lastDate ?? .distantPast
             return a == b ? $0.title < $1.title : (sort == 0 ? a > b : a < b)
         }
+        guard let heldOrder else { return sorted }
+        let positions = Dictionary(uniqueKeysWithValues: heldOrder.enumerated().map { ($1, $0) })
+        return sorted.sorted { (positions[$0.id] ?? Int.max) < (positions[$1.id] ?? Int.max) }
+    }
+    // Persist and show the new date immediately; only defer the row's movement.
+    private func recordWithMotion(_ id: String, _ action: (inout TrackedItem) -> Void) {
+        reorderTask?.cancel()
+        heldOrder = visible.map(\.id)
+        store.change(id, action)
+        reorderTask = Task { @MainActor in
+            do { try await Task.sleep(for: .milliseconds(500)) } catch { return }
+            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.45)) {
+                heldOrder = nil
+            }
+            reorderTask = nil
+        }
+    }
+    private func cancelReorder() {
+        reorderTask?.cancel()
+        reorderTask = nil
+        heldOrder = nil
     }
     var body: some View {
         NavigationStack {
@@ -59,6 +83,10 @@ struct ContentView: View {
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $search, prompt: "Search items or tags")
             .onOpenURL { url in if url.host == "add" { adding = true } }
+            .onChange(of: sort) { _, _ in cancelReorder() }
+            .onChange(of: search) { _, _ in cancelReorder() }
+            .onChange(of: trash) { _, _ in cancelReorder() }
+            .onDisappear { cancelReorder() }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) { Button { trash.toggle() } label: { Image(systemName: trash ? "clock" : "trash") }.accessibilityLabel(trash ? "Tracked items" : "Recently deleted") }
                 ToolbarItem(placement: .topBarTrailing) { Button { adding = true } label: { Label("Add item", systemImage: "plus") } }
@@ -86,7 +114,7 @@ struct ContentView: View {
                 }.frame(maxWidth: .infinity, alignment: .leading).frame(minHeight: 44, alignment: .leading).contentShape(Rectangle())
             }.buttonStyle(.plain)
             if item.deletedAt == nil {
-                Button { store.change(item.id) { $0.record() } } label: {
+                Button { recordWithMotion(item.id) { $0.record() } } label: {
                     Text("Today").font(.system(size: 13, weight: .semibold)).frame(minWidth: 48, minHeight: 44).foregroundStyle(Color.accent)
                 }.buttonStyle(.plain).accessibilityLabel("Record \(item.title) today")
             }
@@ -98,7 +126,7 @@ struct ContentView: View {
                     } else { Button("Restore", systemImage: "arrow.uturn.backward") { store.change(item.id) { $0.deletedAt = nil } } }
                 } label: { Image(systemName: "ellipsis").font(.system(size: 16, weight: .semibold)).frame(width: 36, height: 44).contentShape(Rectangle()) }.accessibilityLabel("Options for \(item.title)")
         }
-            ItemCalendarStrip(item: item) { date in store.change(item.id) { $0.toggle(date) } }
+            ItemCalendarStrip(item: item) { date in recordWithMotion(item.id) { $0.toggle(date) } }
         }.padding(.leading, 12).padding(.trailing, 2).padding(.vertical, 6)
             .background(.background, in: RoundedRectangle(cornerRadius: 12))
             .overlay { RoundedRectangle(cornerRadius: 12).strokeBorder(item.overdue() ? Color.orange.opacity(0.4) : Color.accent.opacity(0.08)) }
