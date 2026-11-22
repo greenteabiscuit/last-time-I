@@ -72,3 +72,14 @@ Use it for short, factual entries so we can reconstruct why the project changed 
 - What changed: Added a `Snooze 7d` action beside `Today` on each widget row, expanded both Latest and Oldest to four distinct items, and reduced fonts and spacing while retaining 48dp-tall action targets. Snooze refreshes every widget; item-specific pending intents prevent stale clicks from snoozing a replacement row.
 - Verified on: Six Robolectric tests pass, including all eight snooze actions, both widget instances, history preservation, expiry, stale clicks, and Today. Inspected native renders at 363dp and 280dp widths and after snoozing. Debug build and normal Pixel update succeeded; all 22 records were unchanged and launcher logs confirmed existing widget 23 reloaded. Live launcher layout was not visually verified.
 - Limitations: Lint retains 103 pre-existing API errors and reports a small-font advisory for the intentionally compact 10sp timestamp.
+
+## 2026-11-22 — Native iPhone version
+
+- Added `ios/` with a SwiftUI app, shared JSON model/storage, and an interactive WidgetKit extension (small, medium, large).
+- Ported history editing back to 2010, tags/search/sort, overdue boundaries, soft delete/restore, and exact seven-day widget snoozing. Health-tagged items remain excluded from widgets.
+- Generated and integrated a 1024px forest-green clock icon with ivory hands and an orange accent.
+- Kept the original Android implementation. iOS starts with the original example titles unrecorded; no Android device data migration is performed.
+- Installed and launched on the connected iPhone 15 Plus. In response to on-device feedback, replaced the large introduction/cards with an inline title and compact rows, removed filler copy, and moved Today beside each title.
+- Added five model/storage tests and an end-to-end UI flow covering add, Today, snooze/unsnooze, delete/restore, relaunch persistence, and history navigation.
+
+- Added a compact horizontal calendar beneath each item at user request. Dates scroll back to 2010 and toggle directly; removed “Not yet” from unrecorded list rows.

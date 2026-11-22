@@ -1,6 +1,8 @@
 # Last Time I...
 
-This project is a standalone Android widget app for remembering the last time something happened.
+This project includes an Android widget app and a native iPhone app for remembering the last time something happened.
+
+For the SwiftUI iPhone app and interactive Home Screen widgets, see [ios/README.md](ios/README.md). Open `ios/LastTimeI.xcodeproj` to build with Xcode.
 
 The current MVP is built around a practical `RemoteViews` pattern:
 

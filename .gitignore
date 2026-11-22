@@ -6,3 +6,10 @@ app/build/
 local.properties
 logs/*
 !logs/.gitkeep
+
+# Xcode user/build state
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xcresult
+.DS_Store

@@ -1,0 +1,667 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0668FD4709AFA38CC1C41742 /* FlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE3C5961B70E2F0D8475611 /* FlowTests.swift */; };
+		1F2849FD6F64FC8F4A0E39BF /* TrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7C2A6D382B21F61C47D3D1A /* TrackerTests.swift */; };
+		498F421C6F211DAB4A939684 /* LastTimeWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 749125AB0A8D853F558B9A8C /* LastTimeWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		547E97AD12A55987F59A49F3 /* LastTimeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 199D19E8CD2BDBCDED904245 /* LastTimeApp.swift */; };
+		96334BF9750ED77010304F6E /* Tracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = F25691D5866A50619BC360A2 /* Tracker.swift */; };
+		C3FD4727D727722A6881F022 /* LastTimeWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D90F44BE5FA2566D6596B17 /* LastTimeWidget.swift */; };
+		DEFB4E5B6551CA9B023B7B63 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8EDCA7D7BD0071BDB9A68901 /* Assets.xcassets */; };
+		F190966E7E9F6511131B5F9B /* Tracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = F25691D5866A50619BC360A2 /* Tracker.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		712BF92B76BFEFD58B7FAC3D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 18085D23461EFCE252394894 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D7B4D21B2C9A9A451414DA83;
+			remoteInfo = LastTimeI;
+		};
+		A6100D99534EAB8A45EEE11C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 18085D23461EFCE252394894 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 32ACB1D1EE8C0C035FEF2B21;
+			remoteInfo = LastTimeWidget;
+		};
+		E5813A6FDDF0BD4FA9C1DA3A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 18085D23461EFCE252394894 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D7B4D21B2C9A9A451414DA83;
+			remoteInfo = LastTimeI;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AA45F8A9865E23D19F847441 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				498F421C6F211DAB4A939684 /* LastTimeWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		199D19E8CD2BDBCDED904245 /* LastTimeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LastTimeApp.swift; sourceTree = "<group>"; };
+		1EAA1579C8252086960EBA76 /* LastTimeI.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = LastTimeI.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2CE3C5961B70E2F0D8475611 /* FlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowTests.swift; sourceTree = "<group>"; };
+		62D1F234CFCD437896A18B82 /* LastTimeWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LastTimeWidget.entitlements; sourceTree = "<group>"; };
+		749125AB0A8D853F558B9A8C /* LastTimeWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = LastTimeWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		74F7AD7D0937EB4A68EBB702 /* LastTimeI.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LastTimeI.entitlements; sourceTree = "<group>"; };
+		7D90F44BE5FA2566D6596B17 /* LastTimeWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LastTimeWidget.swift; sourceTree = "<group>"; };
+		7E7CD20B7EDDF1F791FDA108 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		8A910CE973122F73F4B2E86E /* LastTimeUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LastTimeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8D0DAD1185E076AF9F62A741 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		8EDCA7D7BD0071BDB9A68901 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		C7C2A6D382B21F61C47D3D1A /* TrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackerTests.swift; sourceTree = "<group>"; };
+		DAB9DC9BBB1A4D80856296FD /* LastTimeTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LastTimeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F25691D5866A50619BC360A2 /* Tracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tracker.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		1E9461C6C465A00DDFB36C32 /* Widget */ = {
+			isa = PBXGroup;
+			children = (
+				8D0DAD1185E076AF9F62A741 /* Info.plist */,
+				62D1F234CFCD437896A18B82 /* LastTimeWidget.entitlements */,
+				7D90F44BE5FA2566D6596B17 /* LastTimeWidget.swift */,
+			);
+			path = Widget;
+			sourceTree = "<group>";
+		};
+		2E08C8E5B524656B44670D9D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1EAA1579C8252086960EBA76 /* LastTimeI.app */,
+				DAB9DC9BBB1A4D80856296FD /* LastTimeTests.xctest */,
+				8A910CE973122F73F4B2E86E /* LastTimeUITests.xctest */,
+				749125AB0A8D853F558B9A8C /* LastTimeWidget.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		35888816D71B84FDD351259C = {
+			isa = PBXGroup;
+			children = (
+				95E3D5211C6F7CFDC1C7784E /* App */,
+				62E1E80B869AC70C77B3E42A /* Shared */,
+				A398384A2CCEF46ED8B79072 /* Tests */,
+				86FE3E57F5C061A16308543A /* UITests */,
+				1E9461C6C465A00DDFB36C32 /* Widget */,
+				2E08C8E5B524656B44670D9D /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		62E1E80B869AC70C77B3E42A /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				F25691D5866A50619BC360A2 /* Tracker.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		86FE3E57F5C061A16308543A /* UITests */ = {
+			isa = PBXGroup;
+			children = (
+				2CE3C5961B70E2F0D8475611 /* FlowTests.swift */,
+			);
+			path = UITests;
+			sourceTree = "<group>";
+		};
+		95E3D5211C6F7CFDC1C7784E /* App */ = {
+			isa = PBXGroup;
+			children = (
+				8EDCA7D7BD0071BDB9A68901 /* Assets.xcassets */,
+				7E7CD20B7EDDF1F791FDA108 /* Info.plist */,
+				199D19E8CD2BDBCDED904245 /* LastTimeApp.swift */,
+				74F7AD7D0937EB4A68EBB702 /* LastTimeI.entitlements */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		A398384A2CCEF46ED8B79072 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				C7C2A6D382B21F61C47D3D1A /* TrackerTests.swift */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		32ACB1D1EE8C0C035FEF2B21 /* LastTimeWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AAA631232C6FF0A707F5E4E3 /* Build configuration list for PBXNativeTarget "LastTimeWidget" */;
+			buildPhases = (
+				947C421E6BC4EE69E29E3ABA /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LastTimeWidget;
+			packageProductDependencies = (
+			);
+			productName = LastTimeWidget;
+			productReference = 749125AB0A8D853F558B9A8C /* LastTimeWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		6BF515A1E5C9774D4F81B49B /* LastTimeUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BFB98B94CE02A41C131F51BB /* Build configuration list for PBXNativeTarget "LastTimeUITests" */;
+			buildPhases = (
+				AA80F3894E8EAA16FADB4980 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				743F53522841F46CA8C3573D /* PBXTargetDependency */,
+			);
+			name = LastTimeUITests;
+			packageProductDependencies = (
+			);
+			productName = LastTimeUITests;
+			productReference = 8A910CE973122F73F4B2E86E /* LastTimeUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		C0BAAB04CBE464FC7492AEFA /* LastTimeTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4C9C6A0F55EF4B28DA191D3B /* Build configuration list for PBXNativeTarget "LastTimeTests" */;
+			buildPhases = (
+				12FB0D967AB15E28960FA500 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CD01F756523063FD6ACCC814 /* PBXTargetDependency */,
+			);
+			name = LastTimeTests;
+			packageProductDependencies = (
+			);
+			productName = LastTimeTests;
+			productReference = DAB9DC9BBB1A4D80856296FD /* LastTimeTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		D7B4D21B2C9A9A451414DA83 /* LastTimeI */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5513A2A1810904837938A67C /* Build configuration list for PBXNativeTarget "LastTimeI" */;
+			buildPhases = (
+				6C477D700F25FE0F2B696B78 /* Sources */,
+				9589C5EBE2B60692288FE697 /* Resources */,
+				AA45F8A9865E23D19F847441 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C82BE5FD8C5E5196EF2CF765 /* PBXTargetDependency */,
+			);
+			name = LastTimeI;
+			packageProductDependencies = (
+			);
+			productName = LastTimeI;
+			productReference = 1EAA1579C8252086960EBA76 /* LastTimeI.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		18085D23461EFCE252394894 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					32ACB1D1EE8C0C035FEF2B21 = {
+						DevelopmentTeam = 93Z4HA76J6;
+						ProvisioningStyle = Automatic;
+					};
+					6BF515A1E5C9774D4F81B49B = {
+						DevelopmentTeam = 93Z4HA76J6;
+						ProvisioningStyle = Automatic;
+						TestTargetID = D7B4D21B2C9A9A451414DA83;
+					};
+					C0BAAB04CBE464FC7492AEFA = {
+						DevelopmentTeam = 93Z4HA76J6;
+						ProvisioningStyle = Automatic;
+					};
+					D7B4D21B2C9A9A451414DA83 = {
+						DevelopmentTeam = 93Z4HA76J6;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = FC93572DFDEBB96EFF35163D /* Build configuration list for PBXProject "LastTimeI" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 35888816D71B84FDD351259C;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 2E08C8E5B524656B44670D9D /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D7B4D21B2C9A9A451414DA83 /* LastTimeI */,
+				32ACB1D1EE8C0C035FEF2B21 /* LastTimeWidget */,
+				C0BAAB04CBE464FC7492AEFA /* LastTimeTests */,
+				6BF515A1E5C9774D4F81B49B /* LastTimeUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		9589C5EBE2B60692288FE697 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DEFB4E5B6551CA9B023B7B63 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		12FB0D967AB15E28960FA500 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1F2849FD6F64FC8F4A0E39BF /* TrackerTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6C477D700F25FE0F2B696B78 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				547E97AD12A55987F59A49F3 /* LastTimeApp.swift in Sources */,
+				F190966E7E9F6511131B5F9B /* Tracker.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		947C421E6BC4EE69E29E3ABA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C3FD4727D727722A6881F022 /* LastTimeWidget.swift in Sources */,
+				96334BF9750ED77010304F6E /* Tracker.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA80F3894E8EAA16FADB4980 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0668FD4709AFA38CC1C41742 /* FlowTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		743F53522841F46CA8C3573D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D7B4D21B2C9A9A451414DA83 /* LastTimeI */;
+			targetProxy = 712BF92B76BFEFD58B7FAC3D /* PBXContainerItemProxy */;
+		};
+		C82BE5FD8C5E5196EF2CF765 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 32ACB1D1EE8C0C035FEF2B21 /* LastTimeWidget */;
+			targetProxy = A6100D99534EAB8A45EEE11C /* PBXContainerItemProxy */;
+		};
+		CD01F756523063FD6ACCC814 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D7B4D21B2C9A9A451414DA83 /* LastTimeI */;
+			targetProxy = E5813A6FDDF0BD4FA9C1DA3A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0C3533DA774B49BA043B14B8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.greenteabiscuit.LastTimeUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = LastTimeI;
+			};
+			name = Debug;
+		};
+		3AA010E9F09C805A48F6F4F7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = App/LastTimeI.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = App/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Last Time I…";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.greenteabiscuit.lasttimei;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		445C2B998FEE693B6B5583F3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 93Z4HA76J6;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		5C2126AA62AAC0E7E813ED1C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.greenteabiscuit.LastTimeUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = LastTimeI;
+			};
+			name = Release;
+		};
+		62F2AA7EAD90A5024FA988BC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Widget/LastTimeWidget.entitlements;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Widget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Last Time I…";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.greenteabiscuit.lasttimei.widget;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		7A3929EC80D36B853EC92757 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.greenteabiscuit.LastTimeTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LastTimeI.app/LastTimeI";
+			};
+			name = Debug;
+		};
+		94AF73C32572B1C3AEBE9FE2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = App/LastTimeI.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = App/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Last Time I…";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.greenteabiscuit.lasttimei;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		95159A198706E58897AF5042 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.greenteabiscuit.LastTimeTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LastTimeI.app/LastTimeI";
+			};
+			name = Release;
+		};
+		B7DF01D3415D7DE8D0D7EF97 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 93Z4HA76J6;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		DB3ED9814A8075410D9E9EA3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Widget/LastTimeWidget.entitlements;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Widget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Last Time I…";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.greenteabiscuit.lasttimei.widget;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4C9C6A0F55EF4B28DA191D3B /* Build configuration list for PBXNativeTarget "LastTimeTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7A3929EC80D36B853EC92757 /* Debug */,
+				95159A198706E58897AF5042 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		5513A2A1810904837938A67C /* Build configuration list for PBXNativeTarget "LastTimeI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3AA010E9F09C805A48F6F4F7 /* Debug */,
+				94AF73C32572B1C3AEBE9FE2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		AAA631232C6FF0A707F5E4E3 /* Build configuration list for PBXNativeTarget "LastTimeWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DB3ED9814A8075410D9E9EA3 /* Debug */,
+				62F2AA7EAD90A5024FA988BC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		BFB98B94CE02A41C131F51BB /* Build configuration list for PBXNativeTarget "LastTimeUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0C3533DA774B49BA043B14B8 /* Debug */,
+				5C2126AA62AAC0E7E813ED1C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FC93572DFDEBB96EFF35163D /* Build configuration list for PBXProject "LastTimeI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				445C2B998FEE693B6B5583F3 /* Debug */,
+				B7DF01D3415D7DE8D0D7EF97 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 18085D23461EFCE252394894 /* Project object */;
+}
