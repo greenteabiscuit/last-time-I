@@ -83,3 +83,8 @@ Use it for short, factual entries so we can reconstruct why the project changed 
 - Added five model/storage tests and an end-to-end UI flow covering add, Today, snooze/unsnooze, delete/restore, relaunch persistence, and history navigation.
 
 - Added a compact horizontal calendar beneath each item at user request. Dates scroll back to 2010 and toggle directly; removed “Not yet” from unrecorded list rows.
+
+## 2026-11-22 — Connected-device transfer support
+
+- Added a Debug-only in-app export/import bridge for devices restricting direct App Group filesystem access. Import validates IDs/titles/history/intervals, backs up current records before writing, saves atomically through shared storage, refreshes widgets, and exports a readback.
+- Verified export and import on the connected iPhone, including exact field-by-field readback equality. Personal data and backups are kept outside the repository.

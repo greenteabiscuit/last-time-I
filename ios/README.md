@@ -49,3 +49,12 @@ xcodebuild -project LastTimeI.xcodeproj -scheme LastTimeI \
 ## Icon
 
 Generated with the built-in image generation tool. Final asset: `App/Assets.xcassets/AppIcon.appiconset/AppIcon.png` (1024 × 1024). Prompt: “Create a polished iOS app icon for Last Time I…, a quiet personal tracker remembering when everyday activities last happened. A single bold ivory clock face whose counterclockwise circular arrow ends in a small warm orange dot, on a rich forest green background. Subtle tactile enamel depth, very simple memorable silhouette, centered with generous safe padding, readable at tiny sizes. Square full bleed opaque background; no rounded outside corners, text, mockup, or watermark.”
+
+## Connected-device data transfer (Debug builds)
+
+When direct App Group access is restricted by iOS, the development app supports two launch arguments:
+
+- `--export-transfer` exports the current records to `Documents/Transfer/current.json` in the app data container.
+- `--import-transfer` reads `Documents/Transfer/incoming.json`, validates the records, saves a unique `before-UUID.json` backup, replaces the shared records, refreshes widgets, and exports a readback to `current.json`.
+
+Copy files with `devicectl` using `appDataContainer` and bundle ID `com.greenteabiscuit.lasttimei`. Launch with `--terminate-existing` and exactly one transfer argument. Back up and compare existing records before choosing replacement versus merging. After verifying the readback, relaunch without arguments. Personal backup/import files belong outside the source repository.

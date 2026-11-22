@@ -4,7 +4,10 @@ import WidgetKit
 @MainActor final class TrackerStore: ObservableObject {
     @Published var items: [TrackedItem] = []
     @Published var error: String?
-    init() { reload() }
+    init() {
+        do { try TransferSupport.runIfRequested() } catch { self.error = "Transfer failed: \(error.localizedDescription)" }
+        reload()
+    }
     func reload() { do { items = try TrackerStorage.load() } catch { self.error = "Could not read your saved items: \(error.localizedDescription)" } }
     func commit(_ next: [TrackedItem]) { do { try TrackerStorage.save(next); items = next } catch { self.error = "Could not save: \(error.localizedDescription)" } }
     func update(_ item: TrackedItem) { var next = items; if let i = next.firstIndex(where: { $0.id == item.id }) { next[i] = item } else { next.append(item) }; commit(next) }
