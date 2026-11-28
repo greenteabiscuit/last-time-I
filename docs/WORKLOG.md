@@ -98,3 +98,7 @@ Use it for short, factual entries so we can reconstruct why the project changed 
 
 - Removed the trash shortcut from the main navigation bar. Deleted items now opens from the ellipsis menu beside Sort, with a Back button on the deleted-items screen.
 - Updated the UI flow to open the new menu before restoring a deleted item.
+
+## 2026-11-28 — Remove widget title
+
+- Removed the visible Last time I… title row from all iPhone widget sizes to leave more room for item names and days-since labels. Kept Add inline with the Latest section heading, or beside Today in the small widget.

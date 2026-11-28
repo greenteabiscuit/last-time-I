@@ -41,7 +41,6 @@ struct WidgetView: View {
     @Environment(\.widgetFamily) var family
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack { Label("Last time I…", systemImage: "clock.arrow.circlepath").font(.system(.headline, design: .serif)); Spacer(); Link(destination: URL(string: "lasttimei://add")!) { Image(systemName: "plus.circle.fill") }.accessibilityLabel("Open Last Time I") }
             let selection = TrackerStorage.selection(entry.items, at: entry.date)
             if selection.latest.isEmpty {
                 Text(entry.failed ? "Open the app to check your saved items." : "A little memory for everyday life.").font(.subheadline)
@@ -50,7 +49,11 @@ struct WidgetView: View {
                 ForEach(Array(selection.latest.prefix(1))) { item in
                     Text(item.title).font(.subheadline.weight(.medium)).lineLimit(2)
                     Text(item.elapsed).font(.title3.bold())
-                    Button(intent: RecordTodayIntent(item.id)) { Label("Today", systemImage: "checkmark") }.buttonStyle(.bordered)
+                    HStack {
+                        Button(intent: RecordTodayIntent(item.id)) { Label("Today", systemImage: "checkmark") }.buttonStyle(.bordered)
+                        Spacer(minLength: 0)
+                        addLink
+                    }
                 }
             } else if family == .systemLarge {
                 section("LATEST", items: selection.latest)
@@ -65,9 +68,18 @@ struct WidgetView: View {
             Spacer(minLength: 0)
         }.foregroundStyle(Color(red: 0.12, green: 0.34, blue: 0.28)).containerBackground(Color(red: 0.96, green: 0.95, blue: 0.91), for: .widget)
     }
+    private var addLink: some View {
+        Link(destination: URL(string: "lasttimei://add")!) {
+            Image(systemName: "plus.circle.fill").font(.system(size: 13))
+        }.accessibilityLabel("Add item")
+    }
     func section(_ title: String, items: [TrackedItem]) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.system(size: 9, weight: .bold)).tracking(1.5).foregroundStyle(.secondary)
+            HStack {
+                Text(title).font(.system(size: 9, weight: .bold)).tracking(1.5).foregroundStyle(.secondary)
+                Spacer()
+                if title == "LATEST" { addLink }
+            }
             ForEach(items) { item in
                 HStack(spacing: 6) {
                     VStack(alignment: .leading, spacing: 1) { Text(item.title).font(.system(size: 11, weight: .medium)).lineLimit(1); Text(item.elapsed + (item.overdue(at: entry.date) ? " · Overdue" : "")).font(.system(size: 10)).foregroundStyle(item.overdue(at: entry.date) ? .orange : .secondary) }.frame(maxWidth: .infinity, alignment: .leading)
