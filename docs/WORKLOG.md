@@ -107,3 +107,7 @@ Use it for short, factual entries so we can reconstruct why the project changed 
 
 - Show each widget item name and a semibold days-ago count on one horizontal row, with Today and Snooze alongside. Medium uses full-width rows for two latest and two other oldest items. Show 0 days ago explicitly for today and retain orange overdue highlighting.
 - Calculate the count at the widget entry date. Opening the app requests fresh widget timelines so the installed layout and counts are refreshed.
+
+## 2026-11-28 — Airier widget rows
+
+- Increased row heights, section gaps, and action-button spacing while keeping item names and days-ago counts horizontal. Large widgets use larger name/count type and 28pt rows; medium widgets use 22pt rows to keep all four items visible.

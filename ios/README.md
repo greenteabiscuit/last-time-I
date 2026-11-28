@@ -13,7 +13,7 @@ Native SwiftUI app and interactive WidgetKit extension, iOS 17 or later. Open `L
 - Overdue means calendar days since the latest record **greater than** the expected interval.
 - Soft-delete and restore with history preserved. Deleted items live in the More options menu beside Sort; a Back button returns to the main list.
 - Snooze widget eligibility for exactly 7 × 24 hours; unsnooze in the app.
-- Small, medium, and large Home Screen widgets without an app-title header, with explicit bold days-ago counts alongside item names and Today actions; medium and large also offer snoozing. Large shows up to four latest plus four remaining oldest eligible items and an overflow count. Medium shows two latest and up to two other oldest items in full-width horizontal rows.
+- Small, medium, and large Home Screen widgets without an app-title header, with spaced horizontal rows, bold days-ago counts alongside item names, and Today actions; medium and large also offer snoozing. Large shows up to four latest plus four remaining oldest eligible items and an overflow count. Medium shows two latest and up to two other oldest items in full-width horizontal rows.
 - Deleted, snoozed, and case-insensitive `health`-tagged items stay off widgets.
 - Atomic local JSON storage in the shared App Group; widgets and app share records.
 - Light and dark appearance, native accessibility labels, generated app icon.

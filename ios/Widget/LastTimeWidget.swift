@@ -40,7 +40,7 @@ struct WidgetView: View {
     let entry: TrackerEntry
     @Environment(\.widgetFamily) var family
     var body: some View {
-        VStack(alignment: .leading, spacing: family == .systemMedium ? 4 : 8) {
+        VStack(alignment: .leading, spacing: family == .systemMedium ? 6 : (family == .systemLarge ? 14 : 12)) {
             let selection = TrackerStorage.selection(entry.items, at: entry.date)
             if selection.latest.isEmpty {
                 Text(entry.failed ? "Open the app to check your saved items." : "A little memory for everyday life.").font(.subheadline)
@@ -73,7 +73,7 @@ struct WidgetView: View {
         }.foregroundStyle(Color(red: 0.12, green: 0.34, blue: 0.28)).containerBackground(Color(red: 0.96, green: 0.95, blue: 0.91), for: .widget)
     }
     private func daysLabel(_ item: TrackedItem) -> some View {
-        Text(elapsed(item)).font(.system(size: 12, weight: .semibold)).monospacedDigit()
+        Text(elapsed(item)).font(.system(size: family == .systemLarge ? 13 : 12, weight: .semibold)).monospacedDigit()
             .foregroundStyle(item.overdue(at: entry.date) ? .orange : Color(red: 0.12, green: 0.34, blue: 0.28))
             .lineLimit(1).fixedSize(horizontal: true, vertical: false)
     }
@@ -87,20 +87,20 @@ struct WidgetView: View {
         }.accessibilityLabel("Add item")
     }
     func section(_ title: String, items: [TrackedItem]) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: family == .systemLarge ? 4 : 3) {
             HStack {
                 Text(title).font(.system(size: 9, weight: .bold)).tracking(1.5).foregroundStyle(.secondary)
                 Spacer()
                 if title == "LATEST" { addLink }
             }
             ForEach(items) { item in
-                HStack(spacing: 8) {
-                    Text(item.title).font(.system(size: 12, weight: .medium)).lineLimit(1)
+                HStack(spacing: family == .systemLarge ? 10 : 8) {
+                    Text(item.title).font(.system(size: family == .systemLarge ? 13 : 12, weight: .medium)).lineLimit(1)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     daysLabel(item)
-                    Button(intent: RecordTodayIntent(item.id)) { Image(systemName: "checkmark.circle.fill").font(.system(size: 14)) }.buttonStyle(.plain).accessibilityLabel("Record \(item.title) today")
-                    Button(intent: SnoozeIntent(item.id)) { Image(systemName: "moon").font(.system(size: 12)) }.buttonStyle(.plain).accessibilityLabel("Snooze \(item.title) for 7 days")
-                }.frame(minHeight: 18)
+                    Button(intent: RecordTodayIntent(item.id)) { Image(systemName: "checkmark.circle.fill").font(.system(size: 16)).frame(width: 20, height: family == .systemLarge ? 28 : 22) }.buttonStyle(.plain).accessibilityLabel("Record \(item.title) today")
+                    Button(intent: SnoozeIntent(item.id)) { Image(systemName: "moon").font(.system(size: family == .systemLarge ? 14 : 12)).frame(width: 20, height: family == .systemLarge ? 28 : 22) }.buttonStyle(.plain).accessibilityLabel("Snooze \(item.title) for 7 days")
+                }.frame(minHeight: family == .systemLarge ? 28 : 22)
 
             }
         }.frame(maxWidth: .infinity, alignment: .leading)
