@@ -102,3 +102,8 @@ Use it for short, factual entries so we can reconstruct why the project changed 
 ## 2026-11-28 — Remove widget title
 
 - Removed the visible Last time I… title row from all iPhone widget sizes to leave more room for item names and days-since labels. Kept Add inline with the Latest section heading, or beside Today in the small widget.
+
+## 2026-11-28 — Make widget elapsed days prominent
+
+- Show each widget item name and a semibold days-ago count on one horizontal row, with Today and Snooze alongside. Medium uses full-width rows for two latest and two other oldest items. Show 0 days ago explicitly for today and retain orange overdue highlighting.
+- Calculate the count at the widget entry date. Opening the app requests fresh widget timelines so the installed layout and counts are refreshed.

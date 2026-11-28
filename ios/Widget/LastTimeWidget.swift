@@ -40,15 +40,18 @@ struct WidgetView: View {
     let entry: TrackerEntry
     @Environment(\.widgetFamily) var family
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: family == .systemMedium ? 4 : 8) {
             let selection = TrackerStorage.selection(entry.items, at: entry.date)
             if selection.latest.isEmpty {
                 Text(entry.failed ? "Open the app to check your saved items." : "A little memory for everyday life.").font(.subheadline)
                 Text("Open the app to add or unsnooze items.").font(.caption).foregroundStyle(.secondary)
             } else if family == .systemSmall {
                 ForEach(Array(selection.latest.prefix(1))) { item in
-                    Text(item.title).font(.subheadline.weight(.medium)).lineLimit(2)
-                    Text(item.elapsed).font(.title3.bold())
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(item.title).font(.subheadline.weight(.medium)).lineLimit(2)
+                        Spacer(minLength: 0)
+                        daysLabel(item)
+                    }
                     HStack {
                         Button(intent: RecordTodayIntent(item.id)) { Label("Today", systemImage: "checkmark") }.buttonStyle(.bordered)
                         Spacer(minLength: 0)
@@ -60,13 +63,23 @@ struct WidgetView: View {
                 if !selection.oldest.isEmpty { section("OLDEST", items: selection.oldest) }
                 if selection.extra > 0 { Text("+\(selection.extra) more in app").font(.caption2).foregroundStyle(.secondary) }
             } else {
-                HStack(alignment: .top, spacing: 16) {
-                    section("LATEST", items: Array(selection.latest.prefix(2)))
-                    section("OLDEST", items: Array(entry.items.filter { $0.eligible(at: entry.date) }.sorted { ($0.lastDate ?? .distantPast) < ($1.lastDate ?? .distantPast) }.prefix(2)))
-                }
+                let latest = Array(selection.latest.prefix(2))
+                let latestIDs = Set(latest.map(\.id))
+                let oldest = Array(entry.items.filter { $0.eligible(at: entry.date) && !latestIDs.contains($0.id) }.sorted { ($0.lastDate ?? .distantPast) < ($1.lastDate ?? .distantPast) }.prefix(2))
+                section("LATEST", items: latest)
+                if !oldest.isEmpty { section("OLDEST", items: oldest) }
             }
             Spacer(minLength: 0)
         }.foregroundStyle(Color(red: 0.12, green: 0.34, blue: 0.28)).containerBackground(Color(red: 0.96, green: 0.95, blue: 0.91), for: .widget)
+    }
+    private func daysLabel(_ item: TrackedItem) -> some View {
+        Text(elapsed(item)).font(.system(size: 12, weight: .semibold)).monospacedDigit()
+            .foregroundStyle(item.overdue(at: entry.date) ? .orange : Color(red: 0.12, green: 0.34, blue: 0.28))
+            .lineLimit(1).fixedSize(horizontal: true, vertical: false)
+    }
+    private func elapsed(_ item: TrackedItem) -> String {
+        guard let days = item.days(at: entry.date) else { return "Not recorded" }
+        return "\(days) \(days == 1 ? "day" : "days") ago"
     }
     private var addLink: some View {
         Link(destination: URL(string: "lasttimei://add")!) {
@@ -74,18 +87,21 @@ struct WidgetView: View {
         }.accessibilityLabel("Add item")
     }
     func section(_ title: String, items: [TrackedItem]) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 2) {
             HStack {
                 Text(title).font(.system(size: 9, weight: .bold)).tracking(1.5).foregroundStyle(.secondary)
                 Spacer()
                 if title == "LATEST" { addLink }
             }
             ForEach(items) { item in
-                HStack(spacing: 6) {
-                    VStack(alignment: .leading, spacing: 1) { Text(item.title).font(.system(size: 11, weight: .medium)).lineLimit(1); Text(item.elapsed + (item.overdue(at: entry.date) ? " · Overdue" : "")).font(.system(size: 10)).foregroundStyle(item.overdue(at: entry.date) ? .orange : .secondary) }.frame(maxWidth: .infinity, alignment: .leading)
-                    Button(intent: RecordTodayIntent(item.id)) { Image(systemName: "checkmark.circle.fill").font(.system(size: 18)) }.buttonStyle(.plain).accessibilityLabel("Record \(item.title) today")
-                    Button(intent: SnoozeIntent(item.id)) { Image(systemName: "moon").font(.system(size: 13)) }.buttonStyle(.plain).accessibilityLabel("Snooze \(item.title) for 7 days")
-                }.frame(minHeight: 25)
+                HStack(spacing: 8) {
+                    Text(item.title).font(.system(size: 12, weight: .medium)).lineLimit(1)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    daysLabel(item)
+                    Button(intent: RecordTodayIntent(item.id)) { Image(systemName: "checkmark.circle.fill").font(.system(size: 14)) }.buttonStyle(.plain).accessibilityLabel("Record \(item.title) today")
+                    Button(intent: SnoozeIntent(item.id)) { Image(systemName: "moon").font(.system(size: 12)) }.buttonStyle(.plain).accessibilityLabel("Snooze \(item.title) for 7 days")
+                }.frame(minHeight: 18)
+
             }
         }.frame(maxWidth: .infinity, alignment: .leading)
     }

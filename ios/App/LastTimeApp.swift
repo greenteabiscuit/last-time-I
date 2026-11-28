@@ -17,7 +17,7 @@ import WidgetKit
 @main struct LastTimeApp: App {
     @StateObject private var store = TrackerStore()
     @Environment(\.scenePhase) private var phase
-    var body: some Scene { WindowGroup { ContentView().environmentObject(store).tint(Color.accent).onChange(of: phase) { _, value in if value == .active { store.reload() } } } }
+    var body: some Scene { WindowGroup { ContentView().environmentObject(store).tint(Color.accent).onChange(of: phase) { _, value in if value == .active { store.reload(); WidgetCenter.shared.reloadAllTimelines() } } } }
 }
 extension Color {
     static let accent = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? UIColor(red: 0.55, green: 0.79, blue: 0.67, alpha: 1) : UIColor(red: 0.12, green: 0.34, blue: 0.28, alpha: 1) })
